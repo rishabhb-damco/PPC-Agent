@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { BrandProvider } from './context/BrandContext'
+import { ThemeProvider } from './context/ThemeContext'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import Dashboard from './pages/Dashboard'
@@ -15,6 +16,7 @@ import ApprovalQueue from './pages/ApprovalQueue'
 export default function App() {
   return (
     <BrowserRouter>
+      <ThemeProvider>
       <BrandProvider>
         <div className="flex h-screen overflow-hidden bg-gray-950">
           <Sidebar />
@@ -37,6 +39,7 @@ export default function App() {
           </div>
         </div>
       </BrandProvider>
+      </ThemeProvider>
     </BrowserRouter>
   )
 }
