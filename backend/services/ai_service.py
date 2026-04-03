@@ -3,32 +3,37 @@ from typing import Optional
 from config import settings
 
 try:
-    from google import genai
-    GENAI_AVAILABLE = True
+    from groq import Groq
+    GROQ_AVAILABLE = True
 except ImportError:
-    GENAI_AVAILABLE = False
+    GROQ_AVAILABLE = False
 
 
 class AIService:
     def __init__(self):
         self.client = None
-        if GENAI_AVAILABLE and settings.GEMINI_API_KEY:
-            self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
+        if GROQ_AVAILABLE and settings.GROQ_API_KEY:
+            self.client = Groq(api_key=settings.GROQ_API_KEY)
 
     async def generate(self, prompt: str, system_prompt: Optional[str] = None) -> str:
         if not self.client:
             return (
-                "AI service not configured. Please set GEMINI_API_KEY in environment variables. "
-                "Get a free key at https://aistudio.google.com/app/apikey"
+                "AI service not configured. Please set GROQ_API_KEY in environment variables. "
+                "Get a free key at https://console.groq.com"
             )
-        full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": prompt})
         try:
             response = await asyncio.to_thread(
-                self.client.models.generate_content,
-                model="gemini-1.5-flash",
-                contents=full_prompt,
+                self.client.chat.completions.create,
+                model="llama-3.3-70b-versatile",
+                messages=messages,
+                max_tokens=4096,
+                temperature=0.7,
             )
-            return response.text
+            return response.choices[0].message.content
         except Exception as e:
             return f"AI generation error: {str(e)}"
 

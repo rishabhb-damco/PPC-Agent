@@ -3,8 +3,8 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    GEMINI_API_KEY: str = ""
-    GROQ_API_KEY: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None
+    GROQ_API_KEY: str = ""
     CORS_ORIGINS: str = "*"
     ENVIRONMENT: str = "development"
 
