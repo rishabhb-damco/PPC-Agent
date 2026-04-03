@@ -1,19 +1,46 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createBrand } from '../services/api'
+import { createBrand, extractBrandFromUrl } from '../services/api'
 import { useBrand } from '../context/BrandContext'
-import { Zap, Plus, X, Loader2 } from 'lucide-react'
+import { Zap, Plus, X, Loader2, Globe, CheckCircle } from 'lucide-react'
 
 export default function BrandSetup() {
   const navigate = useNavigate()
   const { refreshBrands, setActiveBrand } = useBrand()
   const [loading, setLoading] = useState(false)
+  const [urlInput, setUrlInput] = useState('')
+  const [extracting, setExtracting] = useState(false)
+  const [extracted, setExtracted] = useState(false)
   const [competitorInput, setCompetitorInput] = useState('')
   const [form, setForm] = useState({
     name: '', website: '', industry: '', target_audience: '',
     monthly_budget: '', goals: '', platforms: ['google', 'meta'],
     competitors: [] as string[],
   })
+
+  const handleExtract = async () => {
+    if (!urlInput.trim()) return
+    setExtracting(true)
+    setExtracted(false)
+    try {
+      const res = await extractBrandFromUrl(urlInput.trim())
+      const d = res.data.extracted
+      setForm(f => ({
+        ...f,
+        name: d.name || f.name,
+        website: urlInput.trim(),
+        industry: d.industry || f.industry,
+        target_audience: d.target_audience || f.target_audience,
+        goals: d.goals || f.goals,
+        competitors: d.suggested_competitors?.length ? d.suggested_competitors : f.competitors,
+      }))
+      setExtracted(true)
+    } catch (e) {
+      alert('Could not extract from URL. Please fill in manually.')
+    } finally {
+      setExtracting(false)
+    }
+  }
 
   const addCompetitor = () => {
     if (competitorInput.trim() && !form.competitors.includes(competitorInput.trim())) {
@@ -67,6 +94,38 @@ export default function BrandSetup() {
             All outputs go to the Approval Queue for your review.
           </p>
         </div>
+      </div>
+
+      {/* URL Import */}
+      <div className="card border-blue-800/30 bg-blue-950/10 space-y-3">
+        <div className="flex items-center gap-2">
+          <Globe size={14} className="text-blue-400" />
+          <h3 className="text-sm font-semibold text-gray-200">Import from Website URL</h3>
+          <span className="text-xs text-gray-500">— auto-fills all fields below</span>
+        </div>
+        <div className="flex gap-2">
+          <input
+            className="input-field"
+            placeholder="https://yourbrand.com"
+            value={urlInput}
+            onChange={e => setUrlInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleExtract()}
+          />
+          <button
+            className="btn-primary flex items-center gap-2 shrink-0"
+            onClick={handleExtract}
+            disabled={extracting || !urlInput.trim()}
+          >
+            {extracting ? <Loader2 size={13} className="animate-spin" /> : <Globe size={13} />}
+            {extracting ? 'Reading...' : 'Import'}
+          </button>
+        </div>
+        {extracted && (
+          <div className="flex items-center gap-2 text-green-400 text-xs">
+            <CheckCircle size={13} />
+            Brand info extracted — review and edit below before saving.
+          </div>
+        )}
       </div>
 
       <div className="card space-y-4">

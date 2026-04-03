@@ -52,6 +52,9 @@ export const getReportsWeekly = () => api.get('/reports/weekly')
 export const getKpiScorecard = () => api.get('/reports/kpi-scorecard')
 export const getAnomalies = () => api.get('/reports/anomalies')
 
+// Extract brand from URL
+export const extractBrandFromUrl = (url: string) => api.post('/extract/from-url', { url })
+
 // Brands
 export const getBrands = () => api.get('/brands/')
 export const createBrand = (data: object) => api.post('/brands/', data)
