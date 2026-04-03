@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from routes import dashboard, campaigns, agents, reports
+from routes import dashboard, campaigns, agents, reports, brands, approvals
 
 app = FastAPI(
     title="PPC Agent API",
@@ -22,6 +22,8 @@ app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Dashboar
 app.include_router(campaigns.router, prefix="/api/v1/campaigns", tags=["Campaigns"])
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["Agents"])
 app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
+app.include_router(brands.router, prefix="/api/v1/brands", tags=["Brands"])
+app.include_router(approvals.router, prefix="/api/v1/approvals", tags=["Approvals"])
 
 
 @app.get("/")

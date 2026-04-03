@@ -51,3 +51,20 @@ export const getScorecard = () => api.get('/agents/a7/scorecard')
 export const getReportsWeekly = () => api.get('/reports/weekly')
 export const getKpiScorecard = () => api.get('/reports/kpi-scorecard')
 export const getAnomalies = () => api.get('/reports/anomalies')
+
+// Brands
+export const getBrands = () => api.get('/brands/')
+export const createBrand = (data: object) => api.post('/brands/', data)
+export const getBrandDetail = (id: string) => api.get(`/brands/${id}`)
+export const getBrandAnalysis = (id: string) => api.get(`/brands/${id}/analysis`)
+export const triggerPipeline = (id: string) => api.post(`/brands/${id}/run-pipeline`)
+
+// Approvals
+export const getApprovals = (brandId?: string, status?: string) =>
+  api.get('/approvals/', { params: { brand_id: brandId, status } })
+export const actionApproval = (id: string, action: string) =>
+  api.post(`/approvals/${id}/action`, { action })
+export const bulkActionApprovals = (item_ids: string[], action: string) =>
+  api.post('/approvals/bulk-action', { item_ids, action })
+export const getApprovalStats = (brandId?: string) =>
+  api.get('/approvals/stats', { params: { brand_id: brandId } })
