@@ -1,0 +1,32 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Trigger Render Deploy
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Trigger Backend Deploy
+        if: env.RENDER_BACKEND_HOOK != ''
+        run: |
+          curl -s -X POST "${{ secrets.RENDER_BACKEND_HOOK }}"
+        env:
+          RENDER_BACKEND_HOOK: ${{ secrets.RENDER_BACKEND_HOOK }}
+
+      - name: Trigger Frontend Deploy
+        if: env.RENDER_FRONTEND_HOOK != ''
+        run: |
+          curl -s -X POST "${{ secrets.RENDER_FRONTEND_HOOK }}"
+        env:
+          RENDER_FRONTEND_HOOK: ${{ secrets.RENDER_FRONTEND_HOOK }}
+
+      - name: Deploy complete
+        run: echo "Render deploy triggered for PPC-Agent"
