@@ -1,16 +1,17 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import List, Optional
 from services.ai_service import ai_service
 
 
 class BaseAgent(ABC):
-    def __init__(self, agent_id: str, name: str, role: str, capabilities: list[str]):
+    def __init__(self, agent_id: str, name: str, role: str, capabilities: List[str]):
         self.agent_id = agent_id
         self.name = name
         self.role = role
         self.capabilities = capabilities
         self.status = "idle"
-        self.last_run: str | None = None
+        self.last_run: Optional[str] = None
 
     def to_dict(self) -> dict:
         return {
