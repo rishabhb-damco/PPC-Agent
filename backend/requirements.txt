@@ -19,4 +19,4 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.9
-# google-ads==24.1.0  # add back when Google Ads credentials are configured
+google-ads==24.1.0
