@@ -37,7 +37,7 @@ Provide: anomalies detected, quick wins, budget recommendations.
             else:
                 prompt = f"Meta Ads analysis: {task}"
 
-            result = await self.ask_ai(prompt, SYSTEM_PROMPT)
+            result = await self.ask_ai(prompt, SYSTEM_PROMPT, task_type="monitoring")
             self._complete()
             requires_approval = "budget" in task.lower() or "launch" in task.lower()
             return {
@@ -45,6 +45,7 @@ Provide: anomalies detected, quick wins, budget recommendations.
                 "agent_name": self.name,
                 "status": "completed",
                 "result": result,
+                "model_used": self._last_model_label,
                 "requires_approval": requires_approval,
                 "approval_type": "Campaign Launch Sign-off" if requires_approval else None,
             }

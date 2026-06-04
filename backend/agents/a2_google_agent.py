@@ -49,7 +49,7 @@ Return: list of negative keywords with match type and reason.
             else:
                 prompt = f"Google Ads task: {task}"
 
-            result = await self.ask_ai(prompt, SYSTEM_PROMPT)
+            result = await self.ask_ai(prompt, SYSTEM_PROMPT, task_type="keywords")
             self._complete()
             requires_approval = task_type == "negatives"
             return {
@@ -57,6 +57,7 @@ Return: list of negative keywords with match type and reason.
                 "agent_name": self.name,
                 "status": "completed",
                 "result": result,
+                "model_used": self._last_model_label,
                 "requires_approval": requires_approval,
                 "approval_type": "Negative KW Apply" if requires_approval else None,
             }

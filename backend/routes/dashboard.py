@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from services.mock_data import get_kpi_summary, ALERTS, get_chart_data
+from services.ai_service import ai_service, TASK_ROUTING
 
 router = APIRouter()
 
@@ -18,6 +19,31 @@ async def get_alerts(resolved: bool = False):
 @router.get("/chart-data")
 async def get_chart():
     return {"data": get_chart_data()}
+
+
+@router.get("/ai-status")
+async def get_ai_status():
+    """Returns which AI providers are configured and the routing table."""
+    avail = ai_service.providers_available
+    routing = [
+        {
+            "task_type": task,
+            "preferred_provider": route["provider"],
+            "label": route["label"],
+            "active": avail.get(route["provider"], False),
+        }
+        for task, route in TASK_ROUTING.items()
+    ]
+    return {
+        "providers": {
+            "groq":       {"configured": avail["groq"],       "model": "llama-3.3-70b-versatile",              "best_for": ["keywords", "monitoring", "routing", "health"],  "signup_url": "https://console.groq.com"},
+            "gemini":     {"configured": avail["gemini"],     "model": "gemini-1.5-flash",                     "best_for": ["research", "reporting"],                         "signup_url": "https://aistudio.google.com/app/apikey"},
+            "mistral":    {"configured": avail["mistral"],    "model": "mistral-small-latest",                 "best_for": ["copy", "creative"],                              "signup_url": "https://console.mistral.ai"},
+            "openrouter": {"configured": avail["openrouter"], "model": "multiple free models",                 "best_for": ["fallback", "overflow"],                          "signup_url": "https://openrouter.ai/keys"},
+        },
+        "routing": routing,
+        "fallback_chain": ["preferred provider", "groq", "openrouter"],
+    }
 
 
 @router.get("/agent-roster")

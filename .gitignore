@@ -37,3 +37,17 @@ logs/
 
 # Render
 .render/
+
+# Local DB
+backend/ppc_agent.db
+*.db
+
+# Local log files
+backend_err.txt
+backend_log.txt
+frontend_err.txt
+frontend_log.txt
+vite_log.txt
+
+# Claude Code
+.claude/

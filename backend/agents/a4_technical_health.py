@@ -43,12 +43,13 @@ Provide:
 3. Estimated effort to fix each issue
 4. Any proactive improvements to make
 """
-            ai_analysis = await self.ask_ai(prompt, SYSTEM_PROMPT)
+            ai_analysis = await self.ask_ai(prompt, SYSTEM_PROMPT, task_type="health")
             self._complete()
             return {
                 "agent_id": self.agent_id,
                 "agent_name": self.name,
                 "status": "completed",
+                "model_used": self._last_model_label,
                 "result": {
                     "health_checks": checks,
                     "overall_status": "critical" if critical else ("warning" if warnings else "healthy"),

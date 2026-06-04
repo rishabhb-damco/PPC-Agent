@@ -1,12 +1,17 @@
-import { Bell, RefreshCw, Sun, Moon } from 'lucide-react'
+import { Bell, RefreshCw, Sun, Moon, LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useBrand } from '../context/BrandContext'
+import { useAuth } from '../context/AuthContext'
 
 export default function Header() {
   const { theme, toggleTheme } = useTheme()
   const { activeBrand, refreshBrands } = useBrand()
+  const { user, logout } = useAuth()
   const pendingCount = activeBrand?.approval_stats?.pending ?? 0
+  const initials = user?.full_name
+    ? user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'RB'
 
   const [time] = useState(() =>
     new Date().toLocaleString('en-GB', {
@@ -49,8 +54,15 @@ export default function Header() {
             </span>
           )}
         </button>
-        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white">
-          RB
+        <button
+          onClick={logout}
+          className="text-gray-400 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-gray-800"
+          title="Sign out"
+        >
+          <LogOut size={16} />
+        </button>
+        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white" title={user?.email}>
+          {initials}
         </div>
       </div>
     </header>

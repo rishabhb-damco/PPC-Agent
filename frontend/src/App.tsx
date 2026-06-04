@@ -1,8 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
 import { BrandProvider } from './context/BrandContext'
 import { ThemeProvider } from './context/ThemeContext'
+import ProtectedRoute from './components/ProtectedRoute'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import GoogleAds from './pages/GoogleAds'
 import MetaAds from './pages/MetaAds'
@@ -13,33 +16,54 @@ import Reports from './pages/Reports'
 import BrandSetup from './pages/BrandSetup'
 import ApprovalQueue from './pages/ApprovalQueue'
 
+function AppShell() {
+  return (
+    <div className="flex h-screen overflow-hidden bg-gray-950">
+      <Sidebar />
+      <div className="flex flex-col flex-1 overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-y-auto p-6 space-y-6">
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/google-ads" element={<GoogleAds />} />
+            <Route path="/meta-ads" element={<MetaAds />} />
+            <Route path="/research" element={<Research />} />
+            <Route path="/technical-health" element={<TechnicalHealth />} />
+            <Route path="/copy-creative" element={<CopyCreative />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/brand-setup" element={<BrandSetup />} />
+            <Route path="/approval-queue" element={<ApprovalQueue />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <ThemeProvider>
-      <BrandProvider>
-        <div className="flex h-screen overflow-hidden bg-gray-950">
-          <Sidebar />
-          <div className="flex flex-col flex-1 overflow-hidden">
-            <Header />
-            <main className="flex-1 overflow-y-auto p-6 space-y-6">
-              <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/google-ads" element={<GoogleAds />} />
-                <Route path="/meta-ads" element={<MetaAds />} />
-                <Route path="/research" element={<Research />} />
-                <Route path="/technical-health" element={<TechnicalHealth />} />
-                <Route path="/copy-creative" element={<CopyCreative />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/brand-setup" element={<BrandSetup />} />
-                <Route path="/approval-queue" element={<ApprovalQueue />} />
-              </Routes>
-            </main>
-          </div>
-        </div>
-      </BrandProvider>
-      </ThemeProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <BrandProvider>
+            <Routes>
+              {/* Public route */}
+              <Route path="/login" element={<Login />} />
+
+              {/* All other routes require auth */}
+              <Route
+                path="/*"
+                element={
+                  <ProtectedRoute>
+                    <AppShell />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </BrandProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

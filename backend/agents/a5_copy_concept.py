@@ -77,13 +77,14 @@ Provide 5 fresh variants with different angles than what's currently running.
             else:
                 prompt = f"Generate ad copy for: {task}. Product: {product}, Audience: {audience}, Platform: {platform}"
 
-            result = await self.ask_ai(prompt, SYSTEM_PROMPT)
+            result = await self.ask_ai(prompt, SYSTEM_PROMPT, task_type="copy")
             self._complete()
             return {
                 "agent_id": self.agent_id,
                 "agent_name": self.name,
                 "status": "completed",
                 "result": result,
+                "model_used": self._last_model_label,
                 "requires_approval": True,
                 "approval_type": "Creative Use Approval",
             }

@@ -65,15 +65,17 @@ Additional context: {task}
 
 Write the full 8-stop report. Be specific with numbers, insights, and recommendations.
 """
-            narrative = await self.ask_ai(prompt, SYSTEM_PROMPT)
+            narrative = await self.ask_ai(prompt, SYSTEM_PROMPT, task_type="reporting")
             self._complete()
             return {
                 "agent_id": self.agent_id,
                 "agent_name": self.name,
                 "status": "completed",
+                "model_used": self._last_model_label,
                 "result": {
                     "period": period,
                     "narrative": narrative,
+                    "model_used": self._last_model_label,
                     "kpi_summary": kpis,
                     "active_alerts": len(active_alerts),
                     "google_summary": google_summary,

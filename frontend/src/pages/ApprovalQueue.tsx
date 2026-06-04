@@ -32,6 +32,17 @@ interface ApprovalItem {
   impact: string
   status: string
   created_at: string
+  metadata?: { model_used?: string }
+}
+
+const modelBadge = (label?: string) => {
+  if (!label) return null
+  const lower = label.toLowerCase()
+  if (lower.includes('gemini'))     return { text: 'Gemini',     cls: 'bg-blue-950/40 text-blue-300 border-blue-700/50' }
+  if (lower.includes('mistral'))    return { text: 'Mistral',    cls: 'bg-purple-950/40 text-purple-300 border-purple-700/50' }
+  if (lower.includes('llama'))      return { text: 'Llama',      cls: 'bg-green-950/40 text-green-300 border-green-700/50' }
+  if (lower.includes('openrouter')) return { text: 'OpenRouter', cls: 'bg-orange-950/40 text-orange-300 border-orange-700/50' }
+  return { text: label.split(' ')[0], cls: 'bg-gray-800 text-gray-400 border-gray-700' }
 }
 
 export default function ApprovalQueue() {
@@ -193,6 +204,14 @@ export default function ApprovalQueue() {
                         {cat.label}
                       </span>
                       <span className="text-[10px] text-gray-600 font-mono uppercase">{item.agent_id}</span>
+                      {(() => {
+                        const mb = modelBadge(item.metadata?.model_used)
+                        return mb ? (
+                          <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${mb.cls}`}>
+                            {mb.text}
+                          </span>
+                        ) : null
+                      })()}
                     </div>
                     {item.status !== 'pending' && (
                       <span className={`text-xs font-semibold capitalize shrink-0 ${

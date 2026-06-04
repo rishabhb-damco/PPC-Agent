@@ -8,6 +8,45 @@ const api = axios.create({
   timeout: 60000,
 })
 
+// Attach token from localStorage to every request
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('ppc_agent_token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+// On 401, clear token and redirect to login
+api.interceptors.response.use(
+  res => res,
+  err => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('ppc_agent_token')
+      window.location.href = '/login'
+    }
+    return Promise.reject(err)
+  }
+)
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+
+export const loginUser = (email: string, password: string) => {
+  // Backend uses OAuth2PasswordRequestForm (form-encoded, username field = email)
+  const form = new URLSearchParams()
+  form.append('username', email)
+  form.append('password', password)
+  return axios.post(`${BASE_URL}/api/v1/auth/login`, form, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+  })
+}
+
+export const registerUser = (email: string, password: string, full_name: string) =>
+  api.post('/auth/register', { email, password, full_name })
+
+export const getMe = (token?: string) =>
+  axios.get(`${BASE_URL}/api/v1/auth/me`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  })
+
 // Dashboard
 export const getDashboardOverview = () => api.get('/dashboard/overview')
 export const getAlerts = (resolved = false) => api.get(`/dashboard/alerts?resolved=${resolved}`)
@@ -54,6 +93,9 @@ export const getAnomalies = () => api.get('/reports/anomalies')
 
 // Extract brand from URL
 export const extractBrandFromUrl = (url: string) => api.post('/extract/from-url', { url })
+
+// AI provider status
+export const getAiStatus = () => api.get('/dashboard/ai-status')
 
 // Brands
 export const getBrands = () => api.get('/brands/')

@@ -1,118 +1,176 @@
-from datetime import datetime
-from typing import Dict, List, Optional
 import uuid
+from datetime import datetime
+from typing import List, Optional
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, update
+from models.db_models import Brand, Analysis, ApprovalItem
 
 
-# ─── In-memory stores (upgradeable to DB later) ───────────────────────────────
+# ─── Serialisers ──────────────────────────────────────────────────────────────
 
-_brands: Dict[str, dict] = {}
-_analyses: Dict[str, dict] = {}      # brand_id -> latest analysis
-_approval_queue: Dict[str, dict] = {}  # item_id -> approval item
+def _brand_to_dict(b: Brand) -> dict:
+    return {
+        "id": b.id,
+        "name": b.name,
+        "website": b.website,
+        "industry": b.industry,
+        "competitors": b.competitors or [],
+        "target_audience": b.target_audience,
+        "monthly_budget": b.monthly_budget,
+        "platforms": b.platforms or ["google", "meta"],
+        "goals": b.goals,
+        "created_at": b.created_at.isoformat() if b.created_at else None,
+        "last_analysed": b.last_analysed.isoformat() if b.last_analysed else None,
+        "analysis_status": b.analysis_status,
+    }
+
+
+def _approval_to_dict(a: ApprovalItem) -> dict:
+    return {
+        "id": a.id,
+        "brand_id": a.brand_id,
+        "type": a.type,
+        "category": a.category,
+        "title": a.title,
+        "description": a.description,
+        "recommendation": a.recommendation,
+        "agent_id": a.agent_id,
+        "impact": a.impact,
+        "status": a.status,
+        "created_at": a.created_at.isoformat() if a.created_at else None,
+        "actioned_at": a.actioned_at.isoformat() if a.actioned_at else None,
+        "metadata": a.metadata_json or {},
+    }
 
 
 # ─── Brand CRUD ───────────────────────────────────────────────────────────────
 
-def create_brand(data: dict) -> dict:
-    brand_id = str(uuid.uuid4())
-    brand = {
-        "id": brand_id,
-        "name": data["name"],
-        "website": data.get("website", ""),
-        "industry": data.get("industry", ""),
-        "competitors": data.get("competitors", []),
-        "target_audience": data.get("target_audience", ""),
-        "monthly_budget": data.get("monthly_budget", ""),
-        "platforms": data.get("platforms", ["google", "meta"]),
-        "goals": data.get("goals", ""),
-        "created_at": datetime.now().isoformat(),
-        "last_analysed": None,
-        "analysis_status": "never_run",  # never_run | running | completed | error
-    }
-    _brands[brand_id] = brand
-    return brand
+async def create_brand(data: dict, db: AsyncSession) -> dict:
+    brand = Brand(
+        id=str(uuid.uuid4()),
+        name=data["name"],
+        website=data.get("website", ""),
+        industry=data.get("industry", ""),
+        competitors=data.get("competitors", []),
+        target_audience=data.get("target_audience", ""),
+        monthly_budget=data.get("monthly_budget", ""),
+        platforms=data.get("platforms", ["google", "meta"]),
+        goals=data.get("goals", ""),
+        created_at=datetime.now(),
+        analysis_status="never_run",
+    )
+    db.add(brand)
+    await db.commit()
+    await db.refresh(brand)
+    return _brand_to_dict(brand)
 
 
-def get_all_brands() -> List[dict]:
-    return list(_brands.values())
+async def get_all_brands(db: AsyncSession) -> List[dict]:
+    result = await db.execute(select(Brand).order_by(Brand.created_at.desc()))
+    return [_brand_to_dict(b) for b in result.scalars().all()]
 
 
-def get_brand(brand_id: str) -> Optional[dict]:
-    return _brands.get(brand_id)
+async def get_brand(brand_id: str, db: AsyncSession) -> Optional[dict]:
+    result = await db.execute(select(Brand).where(Brand.id == brand_id))
+    brand = result.scalar_one_or_none()
+    return _brand_to_dict(brand) if brand else None
 
 
-def update_brand_status(brand_id: str, status: str):
-    if brand_id in _brands:
-        _brands[brand_id]["analysis_status"] = status
-        if status == "completed":
-            _brands[brand_id]["last_analysed"] = datetime.now().isoformat()
+async def update_brand_status(brand_id: str, status: str, db: AsyncSession):
+    values: dict = {"analysis_status": status}
+    if status == "completed":
+        values["last_analysed"] = datetime.now()
+    await db.execute(update(Brand).where(Brand.id == brand_id).values(**values))
+    await db.commit()
 
 
 # ─── Analysis Storage ─────────────────────────────────────────────────────────
 
-def save_analysis(brand_id: str, analysis: dict):
-    _analyses[brand_id] = {
-        **analysis,
-        "brand_id": brand_id,
-        "generated_at": datetime.now().isoformat(),
-    }
+async def save_analysis(brand_id: str, analysis: dict, db: AsyncSession):
+    result = await db.execute(select(Analysis).where(Analysis.brand_id == brand_id))
+    existing = result.scalar_one_or_none()
+    if existing:
+        existing.data = analysis
+        existing.generated_at = datetime.now()
+    else:
+        db.add(Analysis(brand_id=brand_id, data=analysis, generated_at=datetime.now()))
+    await db.commit()
 
 
-def get_analysis(brand_id: str) -> Optional[dict]:
-    return _analyses.get(brand_id)
+async def get_analysis(brand_id: str, db: AsyncSession) -> Optional[dict]:
+    result = await db.execute(select(Analysis).where(Analysis.brand_id == brand_id))
+    row = result.scalar_one_or_none()
+    if not row:
+        return None
+    return {**row.data, "brand_id": brand_id, "generated_at": row.generated_at.isoformat()}
 
 
 # ─── Approval Queue ───────────────────────────────────────────────────────────
 
-def add_approval_item(brand_id: str, item_type: str, title: str, description: str,
-                       recommendation: str, agent_id: str, impact: str = "medium",
-                       category: str = "general", metadata: dict = None) -> dict:
-    item_id = str(uuid.uuid4())
-    item = {
-        "id": item_id,
-        "brand_id": brand_id,
-        "type": item_type,          # copy | keyword | technical | budget | creative | strategy
-        "category": category,       # google_ads | meta_ads | seo | technical | creative
-        "title": title,
-        "description": description,
-        "recommendation": recommendation,
-        "agent_id": agent_id,
-        "impact": impact,           # high | medium | low
-        "status": "pending",        # pending | approved | rejected | implemented
-        "created_at": datetime.now().isoformat(),
-        "actioned_at": None,
-        "metadata": metadata or {},
-    }
-    _approval_queue[item_id] = item
-    return item
+async def add_approval_item(
+    brand_id: str, item_type: str, title: str, description: str,
+    recommendation: str, agent_id: str, impact: str = "medium",
+    category: str = "general", metadata: dict = None, db: AsyncSession = None,
+) -> dict:
+    item = ApprovalItem(
+        id=str(uuid.uuid4()),
+        brand_id=brand_id,
+        type=item_type,
+        category=category,
+        title=title,
+        description=description,
+        recommendation=recommendation,
+        agent_id=agent_id,
+        impact=impact,
+        status="pending",
+        created_at=datetime.now(),
+        metadata_json=metadata or {},
+    )
+    db.add(item)
+    await db.commit()
+    await db.refresh(item)
+    return _approval_to_dict(item)
 
 
-def get_approval_queue(brand_id: str = None, status: str = None) -> List[dict]:
-    items = list(_approval_queue.values())
+async def get_approval_queue(
+    db: AsyncSession, brand_id: str = None, status: str = None,
+) -> List[dict]:
+    stmt = select(ApprovalItem)
     if brand_id:
-        items = [i for i in items if i["brand_id"] == brand_id]
+        stmt = stmt.where(ApprovalItem.brand_id == brand_id)
     if status:
-        items = [i for i in items if i["status"] == status]
+        stmt = stmt.where(ApprovalItem.status == status)
+    result = await db.execute(stmt)
+    items = [_approval_to_dict(a) for a in result.scalars().all()]
     return sorted(items, key=lambda x: (
         {"high": 0, "medium": 1, "low": 2}.get(x["impact"], 1),
-        x["created_at"]
+        x["created_at"] or "",
     ))
 
 
-def action_approval_item(item_id: str, action: str) -> Optional[dict]:
-    """action: approved | rejected"""
-    if item_id in _approval_queue:
-        _approval_queue[item_id]["status"] = action
-        _approval_queue[item_id]["actioned_at"] = datetime.now().isoformat()
-        return _approval_queue[item_id]
-    return None
+async def action_approval_item(item_id: str, action: str, db: AsyncSession) -> Optional[dict]:
+    result = await db.execute(select(ApprovalItem).where(ApprovalItem.id == item_id))
+    item = result.scalar_one_or_none()
+    if not item:
+        return None
+    item.status = action
+    item.actioned_at = datetime.now()
+    await db.commit()
+    await db.refresh(item)
+    return _approval_to_dict(item)
 
 
-def bulk_action_approvals(item_ids: List[str], action: str) -> List[dict]:
-    return [action_approval_item(iid, action) for iid in item_ids if iid in _approval_queue]
+async def bulk_action_approvals(item_ids: List[str], action: str, db: AsyncSession) -> List[dict]:
+    results = []
+    for iid in item_ids:
+        item = await action_approval_item(iid, action, db)
+        if item:
+            results.append(item)
+    return results
 
 
-def get_approval_stats(brand_id: str = None) -> dict:
-    items = get_approval_queue(brand_id)
+async def get_approval_stats(db: AsyncSession, brand_id: str = None) -> dict:
+    items = await get_approval_queue(db, brand_id)
     return {
         "total": len(items),
         "pending": len([i for i in items if i["status"] == "pending"]),

@@ -1,12 +1,22 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from routes import dashboard, campaigns, agents, reports, brands, approvals, extract
+from database import create_tables
+from routes import dashboard, campaigns, agents, reports, brands, approvals, extract, auth
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_tables()
+    yield
+
 
 app = FastAPI(
     title="PPC Agent API",
     description="AI Agency Framework for Performance Marketing Intelligence",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")]
@@ -18,6 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["Dashboard"])
 app.include_router(campaigns.router, prefix="/api/v1/campaigns", tags=["Campaigns"])
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["Agents"])

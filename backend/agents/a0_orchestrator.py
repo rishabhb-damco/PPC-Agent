@@ -49,13 +49,14 @@ Human gates required for: campaign launches, budget changes >10%, creative appro
 
 Respond with routing decision and reasoning.
 """
-            result = await self.ask_ai(prompt, SYSTEM_PROMPT)
+            result = await self.ask_ai(prompt, SYSTEM_PROMPT, task_type="routing")
             self._complete()
             return {
                 "agent_id": self.agent_id,
                 "agent_name": self.name,
                 "status": "completed",
                 "result": result,
+                "model_used": self._last_model_label,
                 "requires_approval": False,
             }
         except Exception as e:

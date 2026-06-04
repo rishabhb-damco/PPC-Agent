@@ -62,13 +62,14 @@ Provide:
             else:
                 prompt = f"Design production task: {task}. Brand: {brand}, Copy: {copy}"
 
-            result = await self.ask_ai(prompt, SYSTEM_PROMPT)
+            result = await self.ask_ai(prompt, SYSTEM_PROMPT, task_type="creative")
             self._complete()
             return {
                 "agent_id": self.agent_id,
                 "agent_name": self.name,
                 "status": "completed",
                 "result": result,
+                "model_used": self._last_model_label,
                 "requires_approval": True,
                 "approval_type": "Creative Use Approval",
             }

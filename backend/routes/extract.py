@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 import httpx
 import re
+from deps import get_current_user
 from services.ai_service import ai_service
 
 router = APIRouter()
@@ -21,7 +22,7 @@ def clean_html(html: str) -> str:
 
 
 @router.post("/from-url")
-async def extract_brand_from_url(req: ExtractRequest):
+async def extract_brand_from_url(req: ExtractRequest, _: dict = Depends(get_current_user)):
     url = req.url.strip()
     if not url.startswith("http"):
         url = "https://" + url
