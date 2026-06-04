@@ -42,10 +42,10 @@ export default function Sidebar() {
           <NavLink
             to="/dashboard"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30'
-                  : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+                  ? 'bg-white/[0.07] text-white border border-white/10'
+                  : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.04]'
               }`
             }
           >
@@ -112,10 +112,10 @@ export default function Sidebar() {
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-blue-600/20 text-blue-400 border border-blue-600/30'
-                      : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+                      ? 'bg-white/[0.07] text-white border border-white/10'
+                      : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.04]'
                   }`
                 }
               >
@@ -131,10 +131,10 @@ export default function Sidebar() {
           <NavLink
             to="/approval-queue"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-yellow-600/20 text-yellow-400 border border-yellow-600/30'
-                  : 'text-gray-400 hover:text-gray-100 hover:bg-gray-800'
+                  ? 'bg-white/[0.07] text-white border border-white/10'
+                  : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.04]'
               }`
             }
           >
