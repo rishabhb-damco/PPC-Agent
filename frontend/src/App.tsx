@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { BrandProvider } from './context/BrandContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -43,7 +43,7 @@ function AppShell() {
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <ThemeProvider>
           <BrandProvider>
@@ -64,6 +64,6 @@ export default function App() {
           </BrandProvider>
         </ThemeProvider>
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
