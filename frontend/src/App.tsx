@@ -16,28 +16,32 @@ import Reports from './pages/Reports'
 import BrandSetup from './pages/BrandSetup'
 import ApprovalQueue from './pages/ApprovalQueue'
 
+// BrandProvider lives here — only mounts after auth, so getBrands() never
+// fires a 401-triggering request while the user is on the login page.
 function AppShell() {
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-950">
-      <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/google-ads" element={<GoogleAds />} />
-            <Route path="/meta-ads" element={<MetaAds />} />
-            <Route path="/research" element={<Research />} />
-            <Route path="/technical-health" element={<TechnicalHealth />} />
-            <Route path="/copy-creative" element={<CopyCreative />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/brand-setup" element={<BrandSetup />} />
-            <Route path="/approval-queue" element={<ApprovalQueue />} />
-          </Routes>
-        </main>
+    <BrandProvider>
+      <div className="flex h-screen overflow-hidden bg-gray-950">
+        <Sidebar />
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6 space-y-6">
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/google-ads" element={<GoogleAds />} />
+              <Route path="/meta-ads" element={<MetaAds />} />
+              <Route path="/research" element={<Research />} />
+              <Route path="/technical-health" element={<TechnicalHealth />} />
+              <Route path="/copy-creative" element={<CopyCreative />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/brand-setup" element={<BrandSetup />} />
+              <Route path="/approval-queue" element={<ApprovalQueue />} />
+            </Routes>
+          </main>
+        </div>
       </div>
-    </div>
+    </BrandProvider>
   )
 }
 
@@ -46,22 +50,20 @@ export default function App() {
     <HashRouter>
       <AuthProvider>
         <ThemeProvider>
-          <BrandProvider>
-            <Routes>
-              {/* Public route */}
-              <Route path="/login" element={<Login />} />
+          <Routes>
+            {/* Public — no BrandProvider, no 401 interceptor firing */}
+            <Route path="/login" element={<Login />} />
 
-              {/* All other routes require auth */}
-              <Route
-                path="/*"
-                element={
-                  <ProtectedRoute>
-                    <AppShell />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </BrandProvider>
+            {/* Protected — BrandProvider only loads after auth confirmed */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <AppShell />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
         </ThemeProvider>
       </AuthProvider>
     </HashRouter>

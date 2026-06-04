@@ -15,13 +15,16 @@ api.interceptors.request.use(config => {
   return config
 })
 
-// On 401, clear token and redirect to login
+// On 401, clear token and redirect to login (only if not already there)
 api.interceptors.response.use(
   res => res,
   err => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('ppc_agent_token')
-      window.location.href = '/login'
+      const onLoginPage = window.location.hash.includes('/login')
+      if (!onLoginPage) {
+        localStorage.removeItem('ppc_agent_token')
+        window.location.hash = '#/login'
+      }
     }
     return Promise.reject(err)
   }
