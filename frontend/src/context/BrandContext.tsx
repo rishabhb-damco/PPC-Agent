@@ -8,6 +8,7 @@ interface Brand {
   website: string
   competitors: string[]
   target_audience: string
+  monthly_budget: string
   platforms: string[]
   analysis_status: string
   last_analysed: string | null
