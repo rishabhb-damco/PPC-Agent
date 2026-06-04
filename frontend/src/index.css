@@ -69,9 +69,9 @@
   .light .divide-gray-800 { @apply divide-slate-200; }
   .light .border-gray-800 { @apply border-slate-200; }
 
-  /* Text overrides in light mode */
-  .light .text-gray-400 { @apply text-gray-500; }
-  .light .text-gray-500 { @apply text-gray-400; }
+  /* Text overrides in light mode — use literal values to avoid @apply circular dependency */
+  .light .text-gray-400 { color: rgb(107 114 128); }  /* gray-500 value */
+  .light .text-gray-500 { color: rgb(156 163 175); }  /* gray-400 value */
   .light .text-gray-300 { @apply text-gray-700; }
   .light .text-gray-200 { @apply text-gray-800; }
   .light .text-white { @apply text-gray-900; }
