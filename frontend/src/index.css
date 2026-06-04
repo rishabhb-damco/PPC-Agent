@@ -3,16 +3,17 @@
 @tailwind utilities;
 
 /*
-  Color palette — neutral zinc-dark (no blue cast)
-  Inspired by Linear / Vercel / Raycast dashboard aesthetic.
+  Color system — dark mode is the default (all Tailwind classes are dark-first).
+  Light mode overrides are applied when <html class="light"> is set.
 
-  --bg-base:    #0c0c0e  (page background  — neutral near-black)
-  --bg-surface: #141416  (sidebar, header  — slightly lifted)
-  --bg-card:    #1a1a1d  (cards            — visible separation)
-  --bg-input:   #222226  (inputs, tags     — interactive elements)
-  --border:     #2a2a2f  (borders          — subtle definition)
-  --border-2:   #333338  (stronger borders — hover states)
-  Accent:       #4f86f7  (blue-ish indigo  — vivid but not harsh)
+  Dark palette (neutral zinc, no blue cast):
+    page bg:    #0c0c0e
+    surface:    #141416   (sidebar, header)
+    card:       #1a1a1d
+    input:      #222226
+    border:     #2a2a2f
+    border-2:   #333338
+    accent:     #4f86f7
 */
 
 :root {
@@ -25,23 +26,20 @@
   --accent:     #4f86f7;
 }
 
-/* ── Dark theme (default) ─────────────────────────────────────────────────── */
+/* ─── Dark mode (default) ────────────────────────────────────────────────── */
 @layer base {
   body {
     background-color: var(--bg-base);
     @apply text-gray-100 font-sans antialiased transition-colors duration-200;
   }
 
-  /* Neutralise Tailwind's blue-tinted grays at the base level */
+  /* Neutralise Tailwind's blue-tinted grays */
   .bg-gray-950 { background-color: var(--bg-base) !important; }
   .bg-gray-900 { background-color: var(--bg-surface) !important; }
   .bg-gray-800 { background-color: var(--bg-input) !important; }
   .bg-gray-700 { background-color: #2e2e33 !important; }
-
   .border-gray-800 { border-color: var(--border) !important; }
   .border-gray-700 { border-color: var(--border-2) !important; }
-
-  /* Hover state overrides */
   .hover\:bg-gray-800:hover { background-color: #1f1f23 !important; }
   .hover\:bg-gray-700:hover { background-color: #26262b !important; }
 
@@ -50,56 +48,134 @@
   ::-webkit-scrollbar-thumb { background-color: var(--border-2); border-radius: 9999px; }
 }
 
-/* ── Light theme ──────────────────────────────────────────────────────────── */
-.light body { @apply bg-slate-50 text-gray-900; }
-.light .bg-gray-950 { background-color: #f8fafc !important; }
-.light .bg-gray-900 { background-color: #ffffff !important; }
-.light .bg-gray-800 { background-color: #f1f5f9 !important; }
-.light .bg-gray-700 { background-color: #e2e8f0 !important; }
-.light .border-gray-800 { border-color: #e2e8f0 !important; }
-.light .border-gray-700 { border-color: #cbd5e1 !important; }
-.light .hover\:bg-gray-800:hover { background-color: #f1f5f9 !important; }
-.light .hover\:bg-gray-700:hover { background-color: #e2e8f0 !important; }
-.light ::-webkit-scrollbar-track { @apply bg-slate-100; }
-.light ::-webkit-scrollbar-thumb { @apply bg-slate-300; }
+/* ─── Light mode overrides ───────────────────────────────────────────────── */
+/* Applied when <html class="light"> */
 
-/* ── Components ──────────────────────────────────────────────────────────── */
+/* Base */
+.light body { background-color: #f4f5f7 !important; color: #111827 !important; }
+
+/* Gray backgrounds */
+.light .bg-gray-950 { background-color: #f4f5f7 !important; }
+.light .bg-gray-900 { background-color: #ffffff !important; }
+.light .bg-gray-800 { background-color: #f1f3f5 !important; }
+.light .bg-gray-700 { background-color: #e5e7eb !important; }
+.light .border-gray-800 { border-color: #e5e7eb !important; }
+.light .border-gray-700 { border-color: #d1d5db !important; }
+.light .hover\:bg-gray-800:hover { background-color: #f1f3f5 !important; }
+.light .hover\:bg-gray-700:hover { background-color: #e5e7eb !important; }
+
+/* Sidebar + Header */
+.light aside { background-color: #ffffff !important; border-color: #e5e7eb !important; }
+.light header { background-color: #ffffff !important; border-color: #e5e7eb !important; }
+
+/* Scrollbar */
+.light ::-webkit-scrollbar-track { background-color: #f1f3f5; }
+.light ::-webkit-scrollbar-thumb { background-color: #d1d5db; }
+
+/* Text — dark becomes readable on white */
+.light .text-white     { color: #111827 !important; }
+.light .text-gray-100  { color: #1f2937 !important; }
+.light .text-gray-200  { color: #374151 !important; }
+.light .text-gray-300  { color: #4b5563 !important; }
+.light .text-gray-400  { color: #6b7280 !important; }
+.light .text-gray-500  { color: #9ca3af !important; }
+.light .text-gray-600  { color: #6b7280 !important; }
+
+/* Coloured alert / severity backgrounds — fix dark opacity on white */
+.light .bg-red-950\/30,
+.light .bg-red-950\/40    { background-color: #fff1f2 !important; }
+.light .bg-orange-950\/30,
+.light .bg-orange-950\/40 { background-color: #fff7ed !important; }
+.light .bg-yellow-950\/30,
+.light .bg-yellow-950\/40 { background-color: #fefce8 !important; }
+.light .bg-blue-950\/30,
+.light .bg-blue-950\/40   { background-color: #eff6ff !important; }
+.light .bg-green-950\/30,
+.light .bg-green-950\/40  { background-color: #f0fdf4 !important; }
+.light .bg-purple-950\/30,
+.light .bg-purple-950\/40 { background-color: #faf5ff !important; }
+.light .bg-pink-950\/30,
+.light .bg-pink-950\/40   { background-color: #fdf2f8 !important; }
+
+/* Coloured borders */
+.light .border-red-800\/60    { border-color: #fca5a5 !important; }
+.light .border-orange-800\/60 { border-color: #fdba74 !important; }
+.light .border-yellow-800\/60 { border-color: #fde047 !important; }
+.light .border-blue-800\/60   { border-color: #93c5fd !important; }
+.light .border-green-800\/60  { border-color: #86efac !important; }
+.light .border-red-800    { border-color: #fca5a5 !important; }
+.light .border-yellow-800 { border-color: #fde68a !important; }
+.light .border-green-800  { border-color: #86efac !important; }
+.light .border-blue-800   { border-color: #93c5fd !important; }
+.light .border-purple-800 { border-color: #c4b5fd !important; }
+.light .border-pink-800   { border-color: #f9a8d4 !important; }
+
+/* Coloured text — dark variants become proper dark on white */
+.light .text-red-300    { color: #b91c1c !important; }
+.light .text-red-400    { color: #dc2626 !important; }
+.light .text-orange-300 { color: #c2410c !important; }
+.light .text-yellow-300,
+.light .text-yellow-400 { color: #b45309 !important; }
+.light .text-green-300,
+.light .text-green-400  { color: #15803d !important; }
+.light .text-blue-300,
+.light .text-blue-400   { color: #1d4ed8 !important; }
+.light .text-purple-300,
+.light .text-purple-400 { color: #7c3aed !important; }
+.light .text-pink-300,
+.light .text-pink-400   { color: #be185d !important; }
+
+/* Severity bar colours (left border strip on alerts) */
+.light .bg-red-500    { background-color: #ef4444 !important; }
+.light .bg-orange-500 { background-color: #f97316 !important; }
+.light .bg-yellow-500 { background-color: #eab308 !important; }
+.light .bg-blue-500   { background-color: #3b82f6 !important; }
+.light .bg-green-500  { background-color: #22c55e !important; }
+
+/* Badge backgrounds in light mode */
+.light .bg-red-900\/40    { background-color: #fee2e2 !important; }
+.light .bg-yellow-900\/40 { background-color: #fef9c3 !important; }
+.light .bg-green-900\/40  { background-color: #dcfce7 !important; }
+.light .bg-blue-900\/40   { background-color: #dbeafe !important; }
+.light .bg-blue-950\/20   { background-color: #eff6ff !important; }
+.light .bg-blue-950\/10   { background-color: #f8fbff !important; }
+.light .bg-blue-950\/30   { background-color: #dbeafe !important; }
+.light .bg-yellow-950\/20 { background-color: #fef9c3 !important; }
+.light .bg-red-950\/20    { background-color: #fee2e2 !important; }
+.light .bg-green-950\/10  { background-color: #f0fdf4 !important; }
+
+/* Table rows */
+.light .divide-gray-800 > * + * { border-color: #e5e7eb !important; }
+.light .divide-gray-800\/60 > * + * { border-color: #e5e7eb !important; }
+
+/* White/transparent glass active state in sidebar */
+.light .bg-white\/\[0\.07\] { background-color: #f0f0f0 !important; }
+.light .border-white\/10    { border-color: #d1d5db !important; }
+.light .hover\:bg-white\/\[0\.04\]:hover { background-color: #f5f5f5 !important; }
+
+/* ─── Component classes ──────────────────────────────────────────────────── */
 @layer components {
 
-  /* Cards — clear separation from page background */
   .card {
     background-color: var(--bg-card);
     border: 1px solid var(--border);
     @apply rounded-xl p-5 transition-colors duration-200;
   }
-  .light .card { @apply bg-white border-slate-200 shadow-sm; }
-
-  /* Sidebar */
-  aside {
-    background-color: var(--bg-surface) !important;
-    border-color: var(--border) !important;
+  .light .card {
+    background-color: #ffffff !important;
+    border-color: #e5e7eb !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   }
-  .light aside { @apply bg-white; border-color: #e2e8f0 !important; }
-  .light aside p, .light aside span { @apply text-gray-600; }
 
-  /* Header */
-  header {
-    background-color: var(--bg-surface) !important;
-    border-color: var(--border) !important;
-  }
-  .light header { @apply bg-white; border-color: #e2e8f0 !important; }
-
-  /* Badges */
   .badge-green  { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900/30  text-green-400  border border-green-800/60; }
   .badge-red    { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-900/30    text-red-400    border border-red-800/60; }
   .badge-yellow { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-900/30 text-yellow-400 border border-yellow-800/60; }
   .badge-blue   { @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-900/30   text-blue-400   border border-blue-800/60; }
-  .light .badge-green  { @apply bg-green-50  text-green-700  border-green-200; }
-  .light .badge-red    { @apply bg-red-50    text-red-700    border-red-200; }
-  .light .badge-yellow { @apply bg-yellow-50 text-yellow-700 border-yellow-200; }
-  .light .badge-blue   { @apply bg-blue-50   text-blue-700   border-blue-200; }
+  .light .badge-green  { background-color: #dcfce7 !important; color: #15803d !important; border-color: #86efac !important; }
+  .light .badge-red    { background-color: #fee2e2 !important; color: #b91c1c !important; border-color: #fca5a5 !important; }
+  .light .badge-yellow { background-color: #fef9c3 !important; color: #a16207 !important; border-color: #fde68a !important; }
+  .light .badge-blue   { background-color: #dbeafe !important; color: #1d4ed8 !important; border-color: #93c5fd !important; }
 
-  /* Buttons — accent blue from our palette */
   .btn-primary {
     background-color: var(--accent);
     @apply hover:opacity-90 text-white text-sm font-medium px-4 py-2 rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed;
@@ -109,26 +185,23 @@
     border: 1px solid var(--border-2);
     @apply text-gray-200 text-sm font-medium px-4 py-2 rounded-lg transition-colors hover:text-white;
   }
-  .light .btn-secondary { @apply bg-slate-100 hover:bg-slate-200 text-gray-700 border-slate-300; }
+  .light .btn-secondary {
+    background-color: #f1f3f5 !important;
+    border-color: #d1d5db !important;
+    color: #374151 !important;
+  }
+  .light .btn-secondary:hover { background-color: #e5e7eb !important; }
 
-  /* Inputs */
   .input-field {
     background-color: var(--bg-input);
     border: 1px solid var(--border-2);
     @apply rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-500
            focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500 w-full transition-colors;
   }
-  .light .input-field { @apply bg-white border-slate-300 text-gray-900 placeholder-slate-400 focus:border-blue-500; }
-
-  /* Tables */
-  .light table { @apply text-gray-800; }
-  .light .divide-gray-800 { @apply divide-slate-200; }
-  .light .border-gray-800 { border-color: #e2e8f0 !important; }
-
-  /* Text in light mode */
-  .light .text-gray-400 { color: rgb(107 114 128); }
-  .light .text-gray-500 { color: rgb(156 163 175); }
-  .light .text-gray-300 { @apply text-gray-700; }
-  .light .text-gray-200 { @apply text-gray-800; }
-  .light .text-white    { @apply text-gray-900; }
+  .light .input-field {
+    background-color: #ffffff !important;
+    border-color: #d1d5db !important;
+    color: #111827 !important;
+  }
+  .light .input-field::placeholder { color: #9ca3af !important; }
 }
