@@ -33,6 +33,23 @@ async def google_ads_status():
     return {"connected": True, "account": summary}
 
 
+@router.get("/google/accessible-accounts")
+async def list_accessible_accounts():
+    """List all Google Ads accounts the current OAuth token can access."""
+    import asyncio
+    if not google_ads_service.is_configured:
+        return {"error": "Not configured"}
+    def _list():
+        svc = google_ads_service.client.get_service("CustomerService")
+        accessible = svc.list_accessible_customers()
+        return list(accessible.resource_names)
+    try:
+        accounts = await asyncio.to_thread(_list)
+        return {"accessible_accounts": accounts, "count": len(accounts)}
+    except Exception as e:
+        return {"error": type(e).__name__, "detail": str(e)[:500]}
+
+
 @router.get("/google/debug")
 async def google_ads_debug():
     """Surface the real error from the Google Ads API for debugging."""
