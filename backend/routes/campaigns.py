@@ -33,6 +33,30 @@ async def google_ads_status():
     return {"connected": True, "account": summary}
 
 
+@router.get("/google/debug")
+async def google_ads_debug():
+    """Surface the real error from the Google Ads API for debugging."""
+    import asyncio
+    from config import settings
+    result = {
+        "is_configured": google_ads_service.is_configured,
+        "customer_id": settings.GOOGLE_ADS_CUSTOMER_ID,
+        "login_customer_id": settings.GOOGLE_ADS_LOGIN_CUSTOMER_ID,
+        "has_developer_token": bool(settings.GOOGLE_ADS_DEVELOPER_TOKEN),
+        "has_refresh_token": bool(settings.GOOGLE_ADS_REFRESH_TOKEN),
+    }
+    try:
+        campaigns = await asyncio.to_thread(google_ads_service._fetch_campaigns_sync, "LAST_30_DAYS")
+        result["success"] = True
+        result["campaign_count"] = len(campaigns)
+        result["campaigns"] = [{"name": c["name"], "status": c["status"], "spend": c["spend"]} for c in campaigns]
+    except Exception as e:
+        result["success"] = False
+        result["error_type"] = type(e).__name__
+        result["error"] = str(e)
+    return result
+
+
 @router.get("/google")
 async def get_google_campaigns(
     status: str = Query(default=None),
