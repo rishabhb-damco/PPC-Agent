@@ -29,7 +29,7 @@ export default function GoogleAds() {
       <h1 className="text-xl font-bold text-white">Google Ads</h1>
 
       <div className="grid grid-cols-4 gap-4">
-        <KPICard label="Total Spend" value={`£${summary?.total_spend?.toLocaleString() ?? '—'}`} />
+        <KPICard label="Total Spend" value={`$${summary?.total_spend?.toLocaleString() ?? '—'}`} />
         <KPICard label="Total Conversions" value={summary?.total_conversions ?? '—'} />
         <KPICard label="Avg. ROAS" value={summary ? `${summary.avg_roas}x` : '—'} />
         <KPICard label="Active Campaigns" value={campaigns.filter(c => c.status === 'ENABLED').length} />
@@ -57,7 +57,7 @@ export default function GoogleAds() {
                 <tr key={c.id} className="hover:bg-gray-800/50 transition-colors">
                   <td className="py-3 pr-4 font-medium text-gray-200">{c.name}</td>
                   <td className="py-3 pr-4"><StatusBadge status={c.status} /></td>
-                  <td className="py-3 pr-4 text-right text-gray-300">£{c.spend.toLocaleString()}</td>
+                  <td className="py-3 pr-4 text-right text-gray-300">${c.spend.toLocaleString()}</td>
                   <td className="py-3 pr-4 text-right text-gray-300">{c.ctr}%</td>
                   <td className="py-3 pr-4 text-right text-gray-300">£{c.avg_cpc}</td>
                   <td className="py-3 pr-4 text-right text-gray-300">{c.conversions}</td>
@@ -100,7 +100,7 @@ export default function GoogleAds() {
                   <td className="py-3 pr-4 text-right text-gray-400">{k.impressions.toLocaleString()}</td>
                   <td className="py-3 pr-4 text-right text-gray-300">{k.clicks.toLocaleString()}</td>
                   <td className="py-3 pr-4 text-right text-gray-300">{k.ctr}%</td>
-                  <td className="py-3 pr-4 text-right text-gray-300">£{k.avg_cpc}</td>
+                  <td className="py-3 pr-4 text-right text-gray-300">${k.avg_cpc}</td>
                   <td className="py-3 text-right text-gray-300">{k.conversions}</td>
                 </tr>
               ))}
