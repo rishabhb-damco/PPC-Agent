@@ -41,8 +41,13 @@ class GoogleAdsService:
                 "refresh_token": settings.GOOGLE_ADS_REFRESH_TOKEN,
                 "use_proto_plus": True,
             }
-            if settings.GOOGLE_ADS_LOGIN_CUSTOMER_ID:
-                cfg["login_customer_id"] = settings.GOOGLE_ADS_LOGIN_CUSTOMER_ID
+            # Only set login_customer_id if it's different from customer_id
+            # (i.e. accessing a sub-account through an MCC)
+            # If the account is directly accessible, omit it to avoid PERMISSION_DENIED
+            cid = settings.GOOGLE_ADS_CUSTOMER_ID.replace("-", "")
+            lcid = settings.GOOGLE_ADS_LOGIN_CUSTOMER_ID.replace("-", "") if settings.GOOGLE_ADS_LOGIN_CUSTOMER_ID else ""
+            if lcid and lcid != cid:
+                cfg["login_customer_id"] = lcid
             self.client = GoogleAdsClient.load_from_dict(cfg)
             self.customer_id = settings.GOOGLE_ADS_CUSTOMER_ID.replace("-", "")
         except Exception as e:
