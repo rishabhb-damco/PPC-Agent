@@ -19,6 +19,4 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.9
-google-ads==24.1.0
-grpcio==1.62.3
-grpcio-status==1.62.3
+google-ads>=26.0.0
