@@ -4,6 +4,7 @@ from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from deps import get_current_user
+from config import settings
 from services.brand_store import (
     create_brand, get_all_brands, get_brand, get_analysis, get_approval_stats,
     update_brand_targets,
@@ -99,7 +100,11 @@ async def get_all_pacing_route(
         google_spend = meta_spend = 0.0
         data_source  = "no_data"
 
-        if "google" in platforms and google_ads_service.is_configured:
+        # Only query Google Ads if this brand's customer ID matches the configured account.
+        # Prevents Wellspring's spend from appearing on Meta-only clients.
+        brand_gads_id = brand.get("google_ads_customer_id", "").replace("-", "")
+        configured_id = settings.GOOGLE_ADS_CUSTOMER_ID.replace("-", "") if settings.GOOGLE_ADS_CUSTOMER_ID else ""
+        if "google" in platforms and google_ads_service.is_configured and brand_gads_id and brand_gads_id == configured_id:
             try:
                 camps = await google_ads_service.get_campaigns("THIS_MONTH")
                 if camps:
@@ -172,6 +177,28 @@ async def trigger_pipeline(
         return {"message": "Pipeline already running for this brand"}
     background_tasks.add_task(run_full_pipeline, brand_id)
     return {"message": "Full analysis pipeline started", "brand_id": brand_id}
+
+
+@router.patch("/{brand_id}/accounts")
+async def set_brand_accounts(
+    brand_id: str,
+    data: dict,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    """Set platform account IDs on a brand (e.g. google_ads_customer_id)."""
+    from sqlalchemy import update
+    from models.db_models import Brand
+    brand = await get_brand(brand_id, db)
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand not found")
+    allowed = {"google_ads_customer_id"}
+    values  = {k: v for k, v in data.items() if k in allowed}
+    if values:
+        await db.execute(update(Brand).where(Brand.id == brand_id).values(**values))
+        await db.commit()
+    updated = await get_brand(brand_id, db)
+    return {"brand": updated}
 
 
 @router.patch("/{brand_id}/targets")

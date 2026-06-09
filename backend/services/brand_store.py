@@ -29,6 +29,7 @@ def _brand_to_dict(b: Brand) -> dict:
         "target_conv_rate":     b.target_conv_rate,
         "target_monthly_spend": b.target_monthly_spend,
         "currency":             getattr(b, "currency", "USD") or "USD",
+        "google_ads_customer_id": getattr(b, "google_ads_customer_id", None),
     }
 
 
@@ -71,6 +72,7 @@ async def create_brand(data: dict, db: AsyncSession) -> dict:
         target_conv_rate=data.get("target_conv_rate"),
         target_monthly_spend=data.get("target_monthly_spend"),
         currency=data.get("currency", "USD"),
+        google_ads_customer_id=data.get("google_ads_customer_id"),
     )
     db.add(brand)
     await db.commit()

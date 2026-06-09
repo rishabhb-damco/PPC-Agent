@@ -27,6 +27,8 @@ class Brand(Base):
     target_conv_rate: Mapped[float | None]     = mapped_column(Float, nullable=True)
     target_monthly_spend: Mapped[float | None] = mapped_column(Float, nullable=True)
     currency: Mapped[str] = mapped_column(String(10), default="USD")
+    # Platform account IDs — gates API calls to the correct account
+    google_ads_customer_id: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
 
 class Analysis(Base):

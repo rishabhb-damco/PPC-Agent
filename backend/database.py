@@ -42,6 +42,7 @@ async def run_column_migrations():
         ("target_conv_rate",     "REAL"     if is_sqlite else "FLOAT"),
         ("target_monthly_spend", "REAL"     if is_sqlite else "FLOAT"),
         ("currency",             "TEXT DEFAULT 'USD'" if is_sqlite else "VARCHAR(10) DEFAULT 'USD'"),
+        ("google_ads_customer_id", "TEXT" if is_sqlite else "VARCHAR(20)"),
     ]
 
     async with engine.begin() as conn:

@@ -22,7 +22,7 @@ from database import get_db
 from deps import get_current_user
 from services.brand_store import get_all_brands, get_brand, get_approval_queue
 from services.google_ads_service import google_ads_service
-from services.mock_data import ALERTS
+# ALERTS import removed — tracking excluded from health score until per-brand alert storage exists
 
 router = APIRouter()
 
@@ -39,20 +39,24 @@ def _score(components: dict) -> str:
 async def _compute_health(brand: dict, db: AsyncSession) -> dict:
     from datetime import date
     from services.brand_store import get_analysis
+    from config import settings
 
-    brand_id   = brand["id"]
-    target_cpl = brand.get("target_cpl")
+    brand_id    = brand["id"]
+    target_cpl  = brand.get("target_cpl")
     target_roas = brand.get("target_roas")
-    platforms  = brand.get("platforms", [])
+    platforms   = brand.get("platforms", [])
 
     components: dict[str, str] = {}
 
-    # ── 1. Tracking status (from existing alert system) ───────────────────────
-    critical_alerts = [a for a in ALERTS if not a["resolved"] and a["severity"] == "critical"]
-    components["tracking"] = "red" if critical_alerts else "green"
+    # Tracking is excluded from health score until per-brand alert storage exists.
+    # The global mock alerts would produce incorrect health signals for all clients.
 
-    # ── 2. CPL vs target ─────────────────────────────────────────────────────
-    if target_cpl and "google" in platforms and google_ads_service.is_configured:
+    # ── CPL vs target ────────────────────────────────────────────────────────
+    brand_gads_id  = brand.get("google_ads_customer_id", "").replace("-", "")
+    configured_id  = settings.GOOGLE_ADS_CUSTOMER_ID.replace("-", "") if settings.GOOGLE_ADS_CUSTOMER_ID else ""
+    gads_linked    = bool(brand_gads_id and brand_gads_id == configured_id)
+
+    if target_cpl and "google" in platforms and google_ads_service.is_configured and gads_linked:
         try:
             camps = await google_ads_service.get_campaigns("LAST_30_DAYS")
             if camps:
@@ -73,7 +77,7 @@ async def _compute_health(brand: dict, db: AsyncSession) -> dict:
         days_el = today.day
 
         total_spend = 0.0
-        if "google" in platforms and google_ads_service.is_configured:
+        if "google" in platforms and google_ads_service.is_configured and gads_linked:
             try:
                 camps = await google_ads_service.get_campaigns("THIS_MONTH")
                 if camps:
