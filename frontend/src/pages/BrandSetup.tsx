@@ -2,20 +2,29 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createBrand, extractBrandFromUrl } from '../services/api'
 import { useBrand } from '../context/BrandContext'
-import { Zap, Plus, X, Loader2, Globe, CheckCircle } from 'lucide-react'
+import { Zap, Plus, X, Loader2, Globe, CheckCircle, Target } from 'lucide-react'
 
 export default function BrandSetup() {
   const navigate = useNavigate()
   const { refreshBrands, setActiveBrand } = useBrand()
-  const [loading, setLoading] = useState(false)
-  const [urlInput, setUrlInput] = useState('')
-  const [extracting, setExtracting] = useState(false)
-  const [extracted, setExtracted] = useState(false)
+  const [loading, setLoading]         = useState(false)
+  const [urlInput, setUrlInput]       = useState('')
+  const [extracting, setExtracting]   = useState(false)
+  const [extracted, setExtracted]     = useState(false)
   const [competitorInput, setCompetitorInput] = useState('')
+  const [activeTab, setActiveTab]     = useState<'details' | 'targets'>('details')
   const [form, setForm] = useState({
     name: '', website: '', industry: '', target_audience: '',
     monthly_budget: '', goals: '', platforms: ['google', 'meta'],
     competitors: [] as string[],
+  })
+  const [targets, setTargets] = useState({
+    target_cpl:           '' as string,
+    target_roas:          '' as string,
+    target_monthly_leads: '' as string,
+    target_conv_rate:     '' as string,
+    target_monthly_spend: '' as string,
+    currency: 'USD',
   })
 
   const handleExtract = async () => {
@@ -62,7 +71,16 @@ export default function BrandSetup() {
     if (!form.name || !form.industry) return
     setLoading(true)
     try {
-      const res = await createBrand(form)
+      const payload = {
+        ...form,
+        target_cpl:           targets.target_cpl           ? parseFloat(targets.target_cpl)           : null,
+        target_roas:          targets.target_roas          ? parseFloat(targets.target_roas)          : null,
+        target_monthly_leads: targets.target_monthly_leads ? parseInt(targets.target_monthly_leads)   : null,
+        target_conv_rate:     targets.target_conv_rate     ? parseFloat(targets.target_conv_rate)     : null,
+        target_monthly_spend: targets.target_monthly_spend ? parseFloat(targets.target_monthly_spend) : null,
+        currency: targets.currency,
+      }
+      const res = await createBrand(payload)
       refreshBrands()
       setActiveBrand(res.data.brand)
       navigate('/dashboard')
@@ -211,6 +229,83 @@ export default function BrandSetup() {
               ))}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Performance Targets tab */}
+      <div className="card space-y-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Target size={14} className="text-indigo-400" />
+          <h3 className="text-sm font-semibold text-white">Performance Targets</h3>
+          <span className="text-[10px] text-gray-500 ml-1">Optional — set now or after the pipeline runs</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Currency</label>
+            <select
+              className="input-field"
+              value={targets.currency}
+              onChange={e => setTargets(t => ({ ...t, currency: e.target.value }))}
+            >
+              <option value="USD">USD ($)</option>
+              <option value="INR">INR (₹)</option>
+              <option value="GBP">GBP (£)</option>
+              <option value="EUR">EUR (€)</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Target CPL</label>
+            <input
+              className="input-field"
+              type="number"
+              placeholder="e.g. 75"
+              value={targets.target_cpl}
+              onChange={e => setTargets(t => ({ ...t, target_cpl: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Target ROAS</label>
+            <input
+              className="input-field"
+              type="number"
+              step="0.1"
+              placeholder="e.g. 4.5"
+              value={targets.target_roas}
+              onChange={e => setTargets(t => ({ ...t, target_roas: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Target Leads / Month</label>
+            <input
+              className="input-field"
+              type="number"
+              placeholder="e.g. 40"
+              value={targets.target_monthly_leads}
+              onChange={e => setTargets(t => ({ ...t, target_monthly_leads: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Target Conversion Rate (%)</label>
+            <input
+              className="input-field"
+              type="number"
+              step="0.1"
+              placeholder="e.g. 8.5"
+              value={targets.target_conv_rate}
+              onChange={e => setTargets(t => ({ ...t, target_conv_rate: e.target.value }))}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Target Monthly Spend</label>
+            <input
+              className="input-field"
+              type="number"
+              placeholder="e.g. 3500"
+              value={targets.target_monthly_spend}
+              onChange={e => setTargets(t => ({ ...t, target_monthly_spend: e.target.value }))}
+            />
+          </div>
         </div>
       </div>
 

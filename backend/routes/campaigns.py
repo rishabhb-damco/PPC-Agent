@@ -73,6 +73,31 @@ async def get_google_campaigns(
     }
 
 
+@router.get("/google/wow")
+async def google_wow(
+    _: dict = Depends(get_current_user),
+):
+    """Week-over-week comparison for Google Ads (current 7 days vs prior 7 days)."""
+    live = await google_ads_service.get_wow_comparison()
+    if live:
+        return {**live, "data_source": "live"}
+
+    # Fallback: mock WoW from mock campaign data with artificial variance
+    from services.mock_data import GOOGLE_CAMPAIGNS
+    spend = sum(c["spend"] for c in GOOGLE_CAMPAIGNS)
+    conv  = sum(c["conversions"] for c in GOOGLE_CAMPAIGNS)
+    cpl   = round(spend / conv, 2) if conv else None
+    # Simulate prior week at 8% higher CPL and 5% lower spend
+    return {
+        "current":  {"spend": spend, "conversions": conv, "cpl": cpl, "ctr": 1.26},
+        "previous": {"spend": round(spend * 0.95, 2), "conversions": int(conv * 0.92),
+                     "cpl": round(cpl * 1.08, 2) if cpl else None, "ctr": 1.18},
+        "changes":  {"spend_pct": 5.3, "conversions_pct": 8.7,
+                     "cpl_pct": -7.4, "ctr_pct": 6.8},
+        "data_source": "mock",
+    }
+
+
 @router.get("/google/keywords")
 async def get_keywords(min_qs: int = Query(default=None)):
     live    = await google_ads_service.get_keywords()

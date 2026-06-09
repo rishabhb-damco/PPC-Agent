@@ -91,6 +91,18 @@ export default function ApprovalQueue() {
 
   const pendingItems = items.filter(i => i.status === 'pending')
 
+  const daysOld = (item: ApprovalItem) =>
+    item.created_at ? Math.floor((Date.now() - new Date(item.created_at).getTime()) / 86400000) : 0
+
+  // Sort pending by age descending, then by impact
+  const sortedItems = [...items].sort((a, b) => {
+    if (a.status !== 'pending' || b.status !== 'pending') return 0
+    const impactOrder = { high: 0, medium: 1, low: 2 }
+    const ageDiff = daysOld(b) - daysOld(a)
+    if (ageDiff !== 0) return ageDiff
+    return (impactOrder[a.impact as keyof typeof impactOrder] ?? 1) - (impactOrder[b.impact as keyof typeof impactOrder] ?? 1)
+  })
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -162,7 +174,7 @@ export default function ApprovalQueue() {
 
       {/* Items */}
       <div className="space-y-3">
-        {items.length === 0 && !loading && (
+        {sortedItems.length === 0 && !loading && (
           <div className="card text-center py-10">
             <CheckCircle size={32} className="text-green-400 mx-auto mb-2" />
             <p className="text-sm text-gray-400">
@@ -170,16 +182,23 @@ export default function ApprovalQueue() {
             </p>
           </div>
         )}
-        {items.map(item => {
+        {sortedItems.map(item => {
           const cat = categoryConfig[item.category] || categoryConfig.strategy
           const CatIcon = cat.icon
           const isSelected = selected.has(item.id)
+          const age = daysOld(item)
+          const urgentRing = item.status === 'pending' && age >= 7
+            ? '1px solid rgba(248,113,113,0.35)'
+            : item.status === 'pending' && age >= 3
+            ? '1px solid rgba(245,158,11,0.35)'
+            : undefined
           return (
             <div
               key={item.id}
               className={`card transition-all ${isSelected ? 'border-blue-600/50 bg-blue-950/10' : ''} ${
                 item.status !== 'pending' ? 'opacity-60' : ''
               }`}
+              style={urgentRing ? { border: urgentRing } : undefined}
             >
               <div className="flex items-start gap-3">
                 {item.status === 'pending' && (
@@ -204,6 +223,20 @@ export default function ApprovalQueue() {
                         {cat.label}
                       </span>
                       <span className="text-[10px] text-gray-600 font-mono uppercase">{item.agent_id}</span>
+                      {/* F08 — Aging badge */}
+                      {item.status === 'pending' && item.created_at && (() => {
+                        const days = Math.floor((Date.now() - new Date(item.created_at).getTime()) / 86400000)
+                        if (days < 1) return null
+                        const color = days >= 7 ? '#F87171' : days >= 3 ? '#F59E0B' : '#71717A'
+                        return (
+                          <span
+                            className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                            style={{ color, backgroundColor: `${color}18`, border: `1px solid ${color}40` }}
+                          >
+                            {days}d pending
+                          </span>
+                        )
+                      })()}
                       {(() => {
                         const mb = modelBadge(item.metadata?.model_used)
                         return mb ? (

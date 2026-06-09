@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, DateTime, JSON, ForeignKey, Integer, Text, Boolean
+from sqlalchemy import String, DateTime, JSON, ForeignKey, Integer, Text, Boolean, Float
 from sqlalchemy.orm import mapped_column, Mapped
 from database import Base
 
@@ -20,6 +20,15 @@ class Brand(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     last_analysed: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     analysis_status: Mapped[str] = mapped_column(String(50), default="never_run")
+    # Performance targets (F01)
+    target_cpl: Mapped[float | None]  = mapped_column(Float, nullable=True)
+    target_roas: Mapped[float | None] = mapped_column(Float, nullable=True)
+    target_monthly_leads: Mapped[int | None]   = mapped_column(Integer, nullable=True)
+    target_conv_rate: Mapped[float | None]     = mapped_column(Float, nullable=True)
+    target_monthly_spend: Mapped[float | None] = mapped_column(Float, nullable=True)
+    currency: Mapped[str] = mapped_column(String(10), default="USD")
+    # Platform account IDs — gates API calls to the correct account
+    google_ads_customer_id: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
 
 class Analysis(Base):

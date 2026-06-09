@@ -22,6 +22,14 @@ def _brand_to_dict(b: Brand) -> dict:
         "created_at": b.created_at.isoformat() if b.created_at else None,
         "last_analysed": b.last_analysed.isoformat() if b.last_analysed else None,
         "analysis_status": b.analysis_status,
+        # Performance targets (F01)
+        "target_cpl":           b.target_cpl,
+        "target_roas":          b.target_roas,
+        "target_monthly_leads": b.target_monthly_leads,
+        "target_conv_rate":     b.target_conv_rate,
+        "target_monthly_spend": b.target_monthly_spend,
+        "currency":             getattr(b, "currency", "USD") or "USD",
+        "google_ads_customer_id": getattr(b, "google_ads_customer_id", None),
     }
 
 
@@ -58,6 +66,13 @@ async def create_brand(data: dict, db: AsyncSession) -> dict:
         goals=data.get("goals", ""),
         created_at=datetime.now(),
         analysis_status="never_run",
+        target_cpl=data.get("target_cpl"),
+        target_roas=data.get("target_roas"),
+        target_monthly_leads=data.get("target_monthly_leads"),
+        target_conv_rate=data.get("target_conv_rate"),
+        target_monthly_spend=data.get("target_monthly_spend"),
+        currency=data.get("currency", "USD"),
+        google_ads_customer_id=data.get("google_ads_customer_id"),
     )
     db.add(brand)
     await db.commit()
@@ -74,6 +89,20 @@ async def get_brand(brand_id: str, db: AsyncSession) -> Optional[dict]:
     result = await db.execute(select(Brand).where(Brand.id == brand_id))
     brand = result.scalar_one_or_none()
     return _brand_to_dict(brand) if brand else None
+
+
+async def update_brand_targets(brand_id: str, targets: dict, db: AsyncSession) -> Optional[dict]:
+    result = await db.execute(select(Brand).where(Brand.id == brand_id))
+    brand = result.scalar_one_or_none()
+    if not brand:
+        return None
+    for field in ("target_cpl", "target_roas", "target_monthly_leads",
+                  "target_conv_rate", "target_monthly_spend", "currency"):
+        if field in targets:
+            setattr(brand, field, targets[field])
+    await db.commit()
+    await db.refresh(brand)
+    return _brand_to_dict(brand)
 
 
 async def update_brand_status(brand_id: str, status: str, db: AsyncSession):

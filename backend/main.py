@@ -2,13 +2,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from database import create_tables
-from routes import dashboard, campaigns, agents, reports, brands, approvals, extract, auth, alerts
+from database import create_tables, run_column_migrations
+from routes import dashboard, campaigns, agents, reports, brands, approvals, extract, auth, alerts, health, lead_quality
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_tables()
+    await run_column_migrations()
     yield
 
 
@@ -36,7 +37,9 @@ app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
 app.include_router(brands.router, prefix="/api/v1/brands", tags=["Brands"])
 app.include_router(approvals.router, prefix="/api/v1/approvals", tags=["Approvals"])
 app.include_router(extract.router, prefix="/api/v1/extract", tags=["Extract"])
-app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
+app.include_router(alerts.router,  prefix="/api/v1/alerts",  tags=["Alerts"])
+app.include_router(health.router,       prefix="/api/v1/health",       tags=["Health"])
+app.include_router(lead_quality.router, prefix="/api/v1/lead-quality", tags=["Lead Quality"])
 
 
 @app.get("/")

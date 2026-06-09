@@ -12,7 +12,16 @@ Your responsibilities:
 2. KPI Scorecards: Colour-coded scorecards (Green/Amber/Red) for each key metric
 3. Anomalies & Actions: Detect deviations from targets and suggest corrective actions
 
-Write in clear, professional language suitable for client-facing reports."""
+Write in clear, professional language suitable for client-facing reports.
+
+PRE-CALL BRIEF MODE: When asked for a pre-call brief, output EXACTLY 5 bullet points.
+No headers, no preamble, no explanation. Just 5 bullets the manager can read in 60 seconds.
+Format:
+• [What performed well this week and why]
+• [What underperformed and the likely cause]
+• [What was changed and why]
+• [What is planned for next week]
+• [What you need from the client before the next call]"""
 
 
 class A7Reporting(BaseAgent):
@@ -28,6 +37,33 @@ class A7Reporting(BaseAgent):
         self._start()
         report_type = input_data.get("type", "weekly")
         task = input_data.get("input", "Generate weekly performance report")
+
+        # Pre-call brief mode
+        if report_type == "pre_call":
+            brand_name = input_data.get("brand_name", "the client")
+            brief_prompt = f"""
+Generate a pre-call brief for {brand_name}.
+Context: {task}
+
+Output EXACTLY 5 bullet points (no headers, no preamble):
+• What performed well this week and why
+• What underperformed and the likely cause
+• What was changed or optimised and why
+• What is planned for next week
+• What you need from the client before the next call
+"""
+            try:
+                brief = await self.ask_ai(brief_prompt, SYSTEM_PROMPT, task_type="reporting")
+                self._complete()
+                return {
+                    "agent_id": self.agent_id, "agent_name": self.name,
+                    "status": "completed", "result": {"brief": brief, "brand_name": brand_name},
+                    "model_used": self._last_model_label,
+                    "requires_approval": False,
+                }
+            except Exception as e:
+                self._error()
+                return {"agent_id": self.agent_id, "status": "error", "result": str(e)}
         try:
             kpis = get_kpi_summary()
             google_summary = {

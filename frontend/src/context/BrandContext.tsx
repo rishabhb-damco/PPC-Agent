@@ -16,6 +16,14 @@ interface Brand {
     pending: number
     high_impact_pending: number
   }
+  // Performance targets (F01)
+  target_cpl?:           number | null
+  target_roas?:          number | null
+  target_monthly_leads?: number | null
+  target_conv_rate?:     number | null
+  target_monthly_spend?: number | null
+  currency?:             string
+  goals?:                string
 }
 
 interface BrandContextType {
