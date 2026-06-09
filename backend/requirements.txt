@@ -2,8 +2,8 @@ fastapi==0.111.1
 uvicorn[standard]==0.30.1
 groq==0.13.0
 # AI providers — all active; Groq is the speed default, Gemini for research, Mistral for copy
-google-generativeai==0.8.3
-mistralai==1.2.5
+google-genai>=1.0.0
+mistralai>=1.0.0
 openai>=1.30.0
 python-dotenv==1.0.1
 httpx==0.28.1

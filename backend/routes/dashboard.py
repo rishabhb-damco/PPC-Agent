@@ -76,7 +76,7 @@ async def get_ai_status():
     return {
         "providers": {
             "groq":       {"configured": avail["groq"],       "model": "llama-3.3-70b-versatile",  "best_for": ["keywords", "monitoring", "routing", "health"],  "signup_url": "https://console.groq.com"},
-            "gemini":     {"configured": avail["gemini"],     "model": "gemini-1.5-flash",          "best_for": ["research", "reporting"],                         "signup_url": "https://aistudio.google.com/app/apikey"},
+            "gemini":     {"configured": avail["gemini"],     "model": "gemini-2.0-flash",          "best_for": ["research", "reporting"],                         "signup_url": "https://aistudio.google.com/app/apikey"},
             "mistral":    {"configured": avail["mistral"],    "model": "mistral-small-latest",      "best_for": ["copy", "creative"],                              "signup_url": "https://console.mistral.ai"},
             "openrouter": {"configured": avail["openrouter"], "model": "multiple free models",      "best_for": ["fallback", "overflow"],                          "signup_url": "https://openrouter.ai/keys"},
         },

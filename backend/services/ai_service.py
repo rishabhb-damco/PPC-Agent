@@ -28,7 +28,7 @@ except ImportError:
     pass
 
 try:
-    import google.generativeai as genai
+    from google import genai as google_genai
     GEMINI_AVAILABLE = True
 except ImportError:
     pass
@@ -60,8 +60,8 @@ OPENROUTER_MODELS = {
 }
 
 TASK_ROUTING: dict[str, dict] = {
-    "research":   {"provider": "gemini",      "model": "gemini-1.5-flash",          "label": "Gemini Flash"},
-    "reporting":  {"provider": "gemini",      "model": "gemini-1.5-flash",          "label": "Gemini Flash"},
+    "research":   {"provider": "gemini",      "model": "gemini-2.0-flash",          "label": "Gemini 2.0 Flash"},
+    "reporting":  {"provider": "gemini",      "model": "gemini-2.0-flash",          "label": "Gemini 2.0 Flash"},
     "copy":       {"provider": "mistral",     "model": "mistral-small-latest",      "label": "Mistral Small"},
     "creative":   {"provider": "mistral",     "model": "mistral-small-latest",      "label": "Mistral Small"},
     "keywords":   {"provider": "groq",        "model": "llama-3.3-70b-versatile",  "label": "Llama 3.3 70B"},
@@ -75,7 +75,7 @@ TASK_ROUTING: dict[str, dict] = {
 class AIService:
     def __init__(self):
         self.groq_client       = None
-        self.gemini_model      = None
+        self.gemini_client     = None   # google-genai Client
         self.mistral_client    = None
         self.openrouter_client = None
         self._init_providers()
@@ -89,8 +89,7 @@ class AIService:
 
         if GEMINI_AVAILABLE and settings.GEMINI_API_KEY:
             try:
-                genai.configure(api_key=settings.GEMINI_API_KEY)
-                self.gemini_model = genai.GenerativeModel("gemini-1.5-flash")
+                self.gemini_client = google_genai.Client(api_key=settings.GEMINI_API_KEY)
             except Exception:
                 pass
 
@@ -115,7 +114,7 @@ class AIService:
     def providers_available(self) -> dict:
         return {
             "groq":       self.groq_client is not None,
-            "gemini":     self.gemini_model is not None,
+            "gemini":     self.gemini_client is not None,
             "mistral":    self.mistral_client is not None,
             "openrouter": self.openrouter_client is not None,
         }
@@ -129,7 +128,7 @@ class AIService:
         provider = route["provider"]
 
         # Preferred provider is available → use it
-        if provider == "gemini"  and self.gemini_model:     return route
+        if provider == "gemini"  and self.gemini_client:    return route
         if provider == "mistral" and self.mistral_client:   return route
         if provider == "groq"    and self.groq_client:      return route
 
@@ -172,7 +171,11 @@ class AIService:
 
     def _gen_gemini(self, prompt: str, system_prompt: Optional[str]) -> str:
         full = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
-        return self.gemini_model.generate_content(full).text
+        resp = self.gemini_client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=full,
+        )
+        return resp.text
 
     def _gen_mistral(self, prompt: str, system_prompt: Optional[str], model: str) -> str:
         resp = self.mistral_client.chat.complete(
