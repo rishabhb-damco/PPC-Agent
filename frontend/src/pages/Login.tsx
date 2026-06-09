@@ -38,20 +38,20 @@ export default function Login() {
       {/* ── Left brand panel (desktop only) ──────────────────────────────── */}
       <div
         className="hidden lg:flex lg:w-[44%] flex-col justify-between p-12 relative overflow-hidden border-r"
-        style={{ backgroundColor: '#0C0B1F', borderColor: '#1E1B4B' }}
+        style={{ backgroundColor: '#13114A', borderColor: '#2D2A72' }}
       >
-        {/* Subtle dot-grid texture */}
+        {/* Dot-grid texture */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: 'radial-gradient(circle, rgba(99,102,241,0.18) 1px, transparent 1px)',
+            backgroundImage: 'radial-gradient(circle, rgba(165,169,252,0.20) 1px, transparent 1px)',
             backgroundSize: '28px 28px',
           }}
         />
-        {/* Radial glow */}
+        {/* Radial glow from bottom */}
         <div
-          className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full pointer-events-none"
-          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.10) 0%, transparent 70%)' }}
+          className="absolute -bottom-24 -left-24 w-[500px] h-[500px] rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 65%)' }}
         />
 
         {/* Logo */}
@@ -59,23 +59,26 @@ export default function Login() {
           <div className="flex items-center gap-3">
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: '#6366F1', boxShadow: '0 4px 14px rgba(99,102,241,0.35)' }}
+              style={{ backgroundColor: '#6366F1', boxShadow: '0 4px 16px rgba(99,102,241,0.45)' }}
             >
               <Zap size={17} className="text-white" />
             </div>
-            <span className="text-lg font-bold text-white tracking-tight">PPC Agent</span>
+            <span className="text-lg font-bold tracking-tight" style={{ color: '#FFFFFF' }}>PPC Agent</span>
           </div>
         </div>
 
         {/* Main copy */}
         <div className="relative z-10 space-y-8">
           <div>
-            <h1 className="text-[2rem] font-bold text-white leading-tight tracking-tight">
+            <h1
+              className="text-[2rem] font-bold leading-tight tracking-tight"
+              style={{ color: '#FFFFFF' }}
+            >
               Every performance<br />
               decision, in one<br />
               intelligent centre.
             </h1>
-            <p className="mt-4 text-sm leading-relaxed" style={{ color: '#8B8DB8' }}>
+            <p className="mt-4 text-sm leading-relaxed" style={{ color: '#C4C6E8' }}>
               Monitor campaigns, analyse quality, generate copy, and act —
               across every client and platform, powered by AI.
             </p>
@@ -86,11 +89,11 @@ export default function Login() {
               <div key={text} className="flex items-center gap-3">
                 <div
                   className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: 'rgba(99,102,241,0.15)' }}
+                  style={{ backgroundColor: 'rgba(165,169,252,0.20)' }}
                 >
-                  <Icon size={12} style={{ color: '#818CF8' }} />
+                  <Icon size={12} style={{ color: '#A5B4FC' }} />
                 </div>
-                <span className="text-sm" style={{ color: '#C4C4D8' }}>{text}</span>
+                <span className="text-sm" style={{ color: '#D8DAF0' }}>{text}</span>
               </div>
             ))}
           </div>
@@ -98,7 +101,7 @@ export default function Login() {
 
         {/* Footer */}
         <div className="relative z-10">
-          <p className="text-xs" style={{ color: '#3D3D5C' }}>
+          <p className="text-xs" style={{ color: '#6B6D9E' }}>
             Damco Digital — Internal Tool
           </p>
         </div>

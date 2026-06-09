@@ -530,7 +530,7 @@ export default function Dashboard() {
                     ))}
                   </div>
                   {!p.configured && (
-                    <p className="text-[9px] text-yellow-600 mt-1">Add key to .env</p>
+                    <p className="text-[9px] mt-1" style={{ color: 'var(--warning)' }}>Add key to .env</p>
                   )}
                 </div>
               </div>

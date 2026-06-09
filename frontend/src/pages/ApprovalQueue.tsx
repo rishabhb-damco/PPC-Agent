@@ -223,7 +223,7 @@ export default function ApprovalQueue() {
                   </div>
                   <p className="text-xs text-gray-400 mt-1">{item.description}</p>
                   {item.recommendation && (
-                    <div className="mt-2 p-2 bg-gray-800/60 rounded text-xs text-gray-300 leading-relaxed max-h-32 overflow-y-auto">
+                    <div className="mt-2 p-2 rounded text-xs leading-relaxed max-h-32 overflow-y-auto" style={{ backgroundColor: 'var(--bg-overlay)', color: 'var(--text-secondary)' }}>
                       {item.recommendation}
                     </div>
                   )}
