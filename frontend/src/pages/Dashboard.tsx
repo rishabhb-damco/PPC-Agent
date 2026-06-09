@@ -91,63 +91,67 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
+      {/* ── Header + Focus strip (single row) ────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        {/* Left: title */}
         <div>
-          <h1 className="text-xl font-bold text-white">Command Centre</h1>
-          <p className="text-xs text-gray-500 mt-0.5">All clients · Live overview</p>
+          <h1 className="text-lg font-bold text-white leading-none">Command Centre</h1>
+          <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-hint)' }}>All clients · Live overview</p>
         </div>
+
+        {/* Centre: focus pills */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <FocusPill
+            count={visibleAlerts.filter(a => a.severity === 'critical' || a.severity === 'error').length}
+            label="alerts"
+            activeColor="#F87171"
+            activeBg="var(--error-dim)"
+            activeBorder="var(--error-border)"
+            onClick={() => document.getElementById('alert-feed')?.scrollIntoView({ behavior: 'smooth' })}
+          />
+          <FocusPill
+            count={highImpact}
+            label="high-impact"
+            activeColor="var(--warning)"
+            activeBg="var(--warning-dim)"
+            activeBorder="var(--warning-border)"
+            onClick={() => navigate('/approval-queue')}
+          />
+          <FocusPill
+            count={totalPending}
+            label="pending"
+            activeColor="#818CF8"
+            activeBg="var(--brand-dim)"
+            activeBorder="var(--brand-border)"
+            onClick={() => navigate('/approval-queue')}
+          />
+          <FocusPill
+            count={activeBrands}
+            label="clients"
+            activeColor="var(--success)"
+            activeBg="var(--success-dim)"
+            activeBorder="var(--success-border)"
+          />
+        </div>
+
+        {/* Right: action */}
         <button
-          className="btn-primary flex items-center gap-2"
+          className="btn-primary flex items-center gap-2 shrink-0"
           onClick={() => navigate('/brand-setup')}
         >
           <Plus size={13} /> Add Client
         </button>
       </div>
 
-      {/* ── Today's Focus strip ─────────────────────────────────────────── */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-xs text-gray-500 font-medium">Today's focus:</span>
-        <FocusPill
-          count={visibleAlerts.filter(a => a.severity === 'critical' || a.severity === 'error').length}
-          label="critical alerts"
-          activeColor="#F87171"
-          activeBg="var(--error-dim)"
-          activeBorder="var(--error-border)"
-          onClick={() => document.getElementById('alert-feed')?.scrollIntoView({ behavior: 'smooth' })}
-        />
-        <FocusPill
-          count={highImpact}
-          label="high-impact"
-          activeColor="var(--warning)"
-          activeBg="var(--warning-dim)"
-          activeBorder="var(--warning-border)"
-          onClick={() => navigate('/approval-queue')}
-        />
-        <FocusPill
-          count={totalPending}
-          label="pending approvals"
-          activeColor="#818CF8"
-          activeBg="var(--brand-dim)"
-          activeBorder="var(--brand-border)"
-          onClick={() => navigate('/approval-queue')}
-        />
-        <FocusPill
-          count={activeBrands}
-          label="clients active"
-          activeColor="var(--success)"
-          activeBg="var(--success-dim)"
-          activeBorder="var(--success-border)"
-        />
-      </div>
-
       {/* ── Client Performance Table ────────────────────────────────────── */}
       <div className="card overflow-hidden p-0">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-800">
-          <h2 className="text-sm font-semibold text-gray-200">Client Overview</h2>
-          <span className="text-xs text-gray-500">{brands.length} client{brands.length !== 1 ? 's' : ''}</span>
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-800">
+          <h2 className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-hint)' }}>
+            Client Overview
+          </h2>
+          <span className="text-xs" style={{ color: 'var(--text-hint)' }}>{brands.length} client{brands.length !== 1 ? 's' : ''}</span>
         </div>
 
         {brands.length === 0 ? (
@@ -161,15 +165,15 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full">
               <thead>
-                <tr className="text-[11px] text-gray-500 uppercase tracking-wider border-b border-gray-800">
-                  <th className="text-left px-5 py-3">Client</th>
-                  <th className="text-left px-4 py-3">Platforms</th>
-                  <th className="text-left px-4 py-3">Pipeline</th>
-                  <th className="text-right px-4 py-3">Pending</th>
-                  <th className="text-right px-4 py-3">High Impact</th>
-                  <th className="text-right px-5 py-3">Actions</th>
+                <tr className="text-[10px] uppercase tracking-wider border-b border-gray-800" style={{ color: 'var(--text-hint)' }}>
+                  <th className="text-left px-4 py-2">Client</th>
+                  <th className="text-left px-3 py-2">Platforms</th>
+                  <th className="text-left px-3 py-2">Pipeline</th>
+                  <th className="text-right px-3 py-2">Pending</th>
+                  <th className="text-right px-3 py-2">High Impact</th>
+                  <th className="text-right px-4 py-2">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800/60">
@@ -186,8 +190,8 @@ export default function Dashboard() {
                       className={`hover:bg-gray-800/40 transition-colors ${isActive ? 'bg-blue-950/10' : ''}`}
                     >
                       {/* Name */}
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-2.5">
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2">
                           {isActive && (
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
                           )}
@@ -204,79 +208,84 @@ export default function Dashboard() {
                       </td>
 
                       {/* Platforms */}
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-1.5">
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-1">
                           {(brand.platforms ?? []).map((p: string) => (
                             <span
                               key={p}
-                              className={`flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded border ${
-                                p === 'google'
-                                  ? 'bg-blue-950/40 text-blue-400 border-blue-800/50'
-                                  : 'bg-purple-950/40 text-purple-400 border-purple-800/50'
-                              }`}
+                              className="flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-md"
+                              style={p === 'google'
+                                ? { backgroundColor: 'rgba(99,102,241,0.12)', color: '#818CF8', border: '1px solid rgba(99,102,241,0.22)' }
+                                : { backgroundColor: 'rgba(168,85,247,0.10)', color: '#C084FC', border: '1px solid rgba(168,85,247,0.22)' }
+                              }
                             >
-                              {p === 'google' ? <TrendingUp size={9} /> : <Share2 size={9} />}
-                              {p === 'google' ? 'Google' : 'Meta'}
+                              {p === 'google' ? <TrendingUp size={8} /> : <Share2 size={8} />}
+                              {p === 'google' ? 'G' : 'M'}
                             </span>
                           ))}
                         </div>
                       </td>
 
                       {/* Pipeline status */}
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full shrink-0 ${pl.dot}`} />
-                          <span className="text-xs text-gray-400">{pl.label}</span>
+                      <td className="px-3 py-2.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pl.dot}`} />
+                          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                            {pl.label}
+                            {brand.last_analysed && brand.analysis_status === 'completed' && (
+                              <span className="ml-1.5" style={{ color: 'var(--text-hint)' }}>
+                                {new Date(brand.last_analysed).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                              </span>
+                            )}
+                          </span>
                         </div>
-                        {brand.last_analysed && brand.analysis_status === 'completed' && (
-                          <p className="text-[10px] text-gray-600 mt-0.5 ml-4">
-                            {new Date(brand.last_analysed).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                          </p>
-                        )}
                       </td>
 
                       {/* Pending approvals */}
-                      <td className="px-4 py-3.5 text-right">
+                      <td className="px-3 py-2.5 text-right">
                         {pending > 0 ? (
                           <button
                             onClick={() => { setActiveBrand(brand); navigate('/approval-queue') }}
-                            className="text-sm font-bold text-yellow-400 hover:text-yellow-300 transition-colors"
+                            className="text-xs font-bold transition-colors"
+                            style={{ color: 'var(--warning)' }}
                           >
                             {pending}
                           </button>
                         ) : (
-                          <span className="text-sm text-gray-600">—</span>
+                          <span className="text-xs" style={{ color: 'var(--text-hint)' }}>—</span>
                         )}
                       </td>
 
                       {/* High impact */}
-                      <td className="px-4 py-3.5 text-right">
+                      <td className="px-3 py-2.5 text-right">
                         {highImpactBrand > 0 ? (
-                          <span className="text-sm font-bold text-red-400">{highImpactBrand}</span>
+                          <span className="text-xs font-bold" style={{ color: '#F87171' }}>{highImpactBrand}</span>
                         ) : (
-                          <span className="text-sm text-gray-600">—</span>
+                          <span className="text-xs" style={{ color: 'var(--text-hint)' }}>—</span>
                         )}
                       </td>
 
-                      {/* Actions */}
-                      <td className="px-5 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      {/* Actions — single compact button */}
+                      <td className="px-4 py-2.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
                           {brand.analysis_status === 'completed' && (
                             <button
                               onClick={() => { setActiveBrand(brand); navigate('/approval-queue') }}
-                              className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-100 px-2.5 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 border border-gray-700 transition-colors"
+                              className="text-[11px] px-2 py-1 rounded-md transition-colors"
+                              style={{ color: 'var(--text-muted)', backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-default)' }}
                             >
-                              Queue <ChevronRight size={11} />
+                              Queue
                             </button>
                           )}
                           <button
                             onClick={() => handleRunPipeline(brand.id)}
                             disabled={isRunning}
-                            className="flex items-center gap-1 text-xs text-blue-400 hover:text-white hover:bg-blue-600 px-2.5 py-1.5 rounded-lg bg-blue-950/30 border border-blue-700/50 transition-colors disabled:opacity-50"
+                            className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-all disabled:opacity-50"
+                            style={{ color: '#818CF8', backgroundColor: 'var(--brand-dim)', border: '1px solid var(--brand-border)' }}
                           >
                             {isRunning
-                              ? <><Loader2 size={11} className="animate-spin" /> Running</>
-                              : <><Play size={11} /> Analyse</>
+                              ? <><Loader2 size={10} className="animate-spin" /> Running</>
+                              : <><Play size={10} /> Analyse</>
                             }
                           </button>
                         </div>
