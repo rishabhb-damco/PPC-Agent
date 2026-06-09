@@ -1,106 +1,73 @@
 """
-Multi-provider AI service with task-based routing.
+Multi-provider AI service — all providers called via direct httpx REST.
+No external AI SDK packages required; only httpx (already in requirements).
 
 Provider → best tasks:
-  Groq (Llama-3.3-70b)     — keywords, monitoring, routing, health  (fast + structured)
-  Gemini (1.5-flash)        — research, reporting                    (long context + synthesis)
-  Mistral (small-latest)    — copy, creative                         (nuanced writing)
-  OpenRouter (free models)  — fallback + overflow                    (access to many free models)
+  Groq (Llama-3.3-70b)  — keywords, monitoring, routing, health  (fast + structured)
+  Gemini 2.0 Flash       — research, reporting                    (long context + synthesis)
+  Mistral Small          — copy, creative                         (nuanced writing)
+  OpenRouter             — fallback + overflow                    (free models)
 
 Fallback chain: preferred → Groq → OpenRouter → error string
 """
 
 import asyncio
+import httpx
 from typing import Optional
 from config import settings
 
-# ── Provider availability ─────────────────────────────────────────────────────
+# ── Provider availability (REST-based, always available if key is set) ─────────
 
-GROQ_AVAILABLE      = False
-GEMINI_AVAILABLE    = False
-MISTRAL_AVAILABLE   = False
-OPENROUTER_AVAILABLE = False
-
+GROQ_AVAILABLE = False
 try:
     from groq import Groq
     GROQ_AVAILABLE = True
 except ImportError:
     pass
 
-# Gemini uses direct httpx REST calls — no package needed
-import httpx as _httpx
-GEMINI_AVAILABLE = True  # always available; key check happens at runtime
+# Gemini, Mistral, OpenRouter use pure httpx — no SDK, no conflicts
+GEMINI_AVAILABLE    = True
+MISTRAL_AVAILABLE   = True
+OPENROUTER_AVAILABLE = True
 
-try:
-    from mistralai import Mistral
-    MISTRAL_AVAILABLE = True
-except ImportError:
-    pass
-
-try:
-    from openai import OpenAI as OpenAIClient
-    OPENROUTER_AVAILABLE = True
-except ImportError:
-    pass
-
-# ── Task → provider routing table ─────────────────────────────────────────────
-# OpenRouter free model list (always free, no rate-limit cost):
-#   meta-llama/llama-3.1-8b-instruct:free  — fast general
-#   mistralai/mistral-7b-instruct:free      — lightweight creative
-#   google/gemini-flash-1.5:free            — research (when available)
+# ── Task routing table ────────────────────────────────────────────────────────
 
 OPENROUTER_MODELS = {
-    "research":   "google/gemini-flash-1.5:free",
-    "reporting":  "google/gemini-flash-1.5:free",
-    "copy":       "mistralai/mistral-7b-instruct:free",
-    "creative":   "mistralai/mistral-7b-instruct:free",
-    "default":    "meta-llama/llama-3.1-8b-instruct:free",
+    "research":  "google/gemini-flash-1.5:free",
+    "reporting": "google/gemini-flash-1.5:free",
+    "copy":      "mistralai/mistral-7b-instruct:free",
+    "creative":  "mistralai/mistral-7b-instruct:free",
+    "default":   "meta-llama/llama-3.1-8b-instruct:free",
 }
 
 TASK_ROUTING: dict[str, dict] = {
-    "research":   {"provider": "gemini",      "model": "gemini-2.0-flash",          "label": "Gemini 2.0 Flash"},
-    "reporting":  {"provider": "gemini",      "model": "gemini-2.0-flash",          "label": "Gemini 2.0 Flash"},
-    "copy":       {"provider": "mistral",     "model": "mistral-small-latest",      "label": "Mistral Small"},
-    "creative":   {"provider": "mistral",     "model": "mistral-small-latest",      "label": "Mistral Small"},
-    "keywords":   {"provider": "groq",        "model": "llama-3.3-70b-versatile",  "label": "Llama 3.3 70B"},
-    "monitoring": {"provider": "groq",        "model": "llama-3.3-70b-versatile",  "label": "Llama 3.3 70B"},
-    "routing":    {"provider": "groq",        "model": "llama-3.3-70b-versatile",  "label": "Llama 3.3 70B"},
-    "health":     {"provider": "groq",        "model": "llama-3.3-70b-versatile",  "label": "Llama 3.3 70B"},
-    "default":    {"provider": "groq",        "model": "llama-3.3-70b-versatile",  "label": "Llama 3.3 70B"},
+    "research":   {"provider": "gemini",      "model": "gemini-2.0-flash",         "label": "Gemini 2.0 Flash"},
+    "reporting":  {"provider": "gemini",      "model": "gemini-2.0-flash",         "label": "Gemini 2.0 Flash"},
+    "copy":       {"provider": "mistral",     "model": "mistral-small-latest",     "label": "Mistral Small"},
+    "creative":   {"provider": "mistral",     "model": "mistral-small-latest",     "label": "Mistral Small"},
+    "keywords":   {"provider": "groq",        "model": "llama-3.3-70b-versatile", "label": "Llama 3.3 70B"},
+    "monitoring": {"provider": "groq",        "model": "llama-3.3-70b-versatile", "label": "Llama 3.3 70B"},
+    "routing":    {"provider": "groq",        "model": "llama-3.3-70b-versatile", "label": "Llama 3.3 70B"},
+    "health":     {"provider": "groq",        "model": "llama-3.3-70b-versatile", "label": "Llama 3.3 70B"},
+    "default":    {"provider": "groq",        "model": "llama-3.3-70b-versatile", "label": "Llama 3.3 70B"},
 }
+
+GROQ_FALLBACK = {"provider": "groq", "model": "llama-3.3-70b-versatile", "label": "Llama 3.3 70B (fallback)"}
 
 
 class AIService:
     def __init__(self):
-        self.groq_client       = None
-        self.gemini_client     = None   # google-genai Client
-        self.mistral_client    = None
-        self.openrouter_client = None
-        self._init_providers()
+        self.groq_client = None
+        # REST-based providers store their API key as the "client"
+        self.gemini_key     = settings.GEMINI_API_KEY or ""
+        self.mistral_key    = settings.MISTRAL_API_KEY or ""
+        self.openrouter_key = settings.OPENROUTER_API_KEY or ""
+        self._init_groq()
 
-    def _init_providers(self):
+    def _init_groq(self):
         if GROQ_AVAILABLE and settings.GROQ_API_KEY:
             try:
                 self.groq_client = Groq(api_key=settings.GROQ_API_KEY)
-            except Exception:
-                pass
-
-        # Gemini is "configured" simply if the key is present — no client object needed
-        if settings.GEMINI_API_KEY:
-            self.gemini_client = settings.GEMINI_API_KEY  # store the key as the "client"
-
-        if MISTRAL_AVAILABLE and settings.MISTRAL_API_KEY:
-            try:
-                self.mistral_client = Mistral(api_key=settings.MISTRAL_API_KEY)
-            except Exception:
-                pass
-
-        if OPENROUTER_AVAILABLE and settings.OPENROUTER_API_KEY:
-            try:
-                self.openrouter_client = OpenAIClient(
-                    base_url="https://openrouter.ai/api/v1",
-                    api_key=settings.OPENROUTER_API_KEY,
-                )
             except Exception:
                 pass
 
@@ -110,46 +77,31 @@ class AIService:
     def providers_available(self) -> dict:
         return {
             "groq":       self.groq_client is not None,
-            "gemini":     self.gemini_client is not None,
-            "mistral":    self.mistral_client is not None,
-            "openrouter": self.openrouter_client is not None,
+            "gemini":     bool(self.gemini_key),
+            "mistral":    bool(self.mistral_key),
+            "openrouter": bool(self.openrouter_key),
         }
 
     def _resolve_route(self, task_type: str) -> dict | None:
-        """
-        Returns the route dict to use, falling back in priority order:
-        preferred → groq → openrouter → None (all down).
-        """
+        avail = self.providers_available
         route    = TASK_ROUTING.get(task_type, TASK_ROUTING["default"])
         provider = route["provider"]
 
-        # Preferred provider is available → use it
-        if provider == "gemini"  and self.gemini_client:    return route
-        if provider == "mistral" and self.mistral_client:   return route
-        if provider == "groq"    and self.groq_client:      return route
+        if provider == "gemini"  and avail["gemini"]:     return route
+        if provider == "mistral" and avail["mistral"]:    return route
+        if provider == "groq"    and avail["groq"]:       return route
 
-        # Preferred not available → fall back to Groq
-        if self.groq_client:
-            return {
-                "provider": "groq",
-                "model": "llama-3.3-70b-versatile",
-                "label": f"Llama 3.3 70B (fallback — {provider} not configured)",
-            }
+        # Fallback → Groq → OpenRouter → None
+        if avail["groq"]:
+            return {**GROQ_FALLBACK, "label": f"Llama 3.3 70B (fallback — {provider} key not set)"}
+        if avail["openrouter"]:
+            model = OPENROUTER_MODELS.get(task_type, OPENROUTER_MODELS["default"])
+            return {"provider": "openrouter", "model": model, "label": f"OpenRouter/{model.split('/')[1].split(':')[0]}"}
+        return None
 
-        # Groq also down → fall back to OpenRouter
-        if self.openrouter_client:
-            or_model = OPENROUTER_MODELS.get(task_type, OPENROUTER_MODELS["default"])
-            return {
-                "provider": "openrouter",
-                "model": or_model,
-                "label": f"OpenRouter/{or_model.split('/')[1].split(':')[0]} (fallback)",
-            }
+    # ── Sync generation helpers ───────────────────────────────────────────────
 
-        return None  # Everything is down
-
-    # ── Sync generation methods (run in thread pool) ──────────────────────────
-
-    def _build_messages(self, prompt: str, system_prompt: Optional[str]) -> list:
+    def _chat_messages(self, prompt: str, system_prompt: Optional[str]) -> list:
         msgs = []
         if system_prompt:
             msgs.append({"role": "system", "content": system_prompt})
@@ -159,63 +111,55 @@ class AIService:
     def _gen_groq(self, prompt: str, system_prompt: Optional[str], model: str) -> str:
         resp = self.groq_client.chat.completions.create(
             model=model,
-            messages=self._build_messages(prompt, system_prompt),
+            messages=self._chat_messages(prompt, system_prompt),
             max_tokens=4096,
             temperature=0.7,
         )
         return resp.choices[0].message.content
 
     def _gen_gemini(self, prompt: str, system_prompt: Optional[str]) -> str:
-        """Call Gemini REST API directly via httpx — no SDK package required."""
+        """Gemini REST API — no SDK package required."""
         full = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_client}"
-        payload = {"contents": [{"role": "user", "parts": [{"text": full}]}]}
-        resp = _httpx.post(url, json=payload, timeout=60)
+        url  = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_key}"
+        resp = httpx.post(url, json={"contents": [{"role": "user", "parts": [{"text": full}]}]}, timeout=60)
         resp.raise_for_status()
         return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
 
     def _gen_mistral(self, prompt: str, system_prompt: Optional[str], model: str) -> str:
-        resp = self.mistral_client.chat.complete(
-            model=model,
-            messages=self._build_messages(prompt, system_prompt),
+        """Mistral REST API (OpenAI-compatible) — no SDK package required."""
+        resp = httpx.post(
+            "https://api.mistral.ai/v1/chat/completions",
+            headers={"Authorization": f"Bearer {self.mistral_key}", "Content-Type": "application/json"},
+            json={"model": model, "messages": self._chat_messages(prompt, system_prompt), "max_tokens": 4096},
+            timeout=60,
         )
-        return resp.choices[0].message.content
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"]
 
     def _gen_openrouter(self, prompt: str, system_prompt: Optional[str], model: str) -> str:
-        resp = self.openrouter_client.chat.completions.create(
-            model=model,
-            messages=self._build_messages(prompt, system_prompt),
-            max_tokens=4096,
+        """OpenRouter REST API (OpenAI-compatible) — no SDK package required."""
+        resp = httpx.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={"Authorization": f"Bearer {self.openrouter_key}", "Content-Type": "application/json"},
+            json={"model": model, "messages": self._chat_messages(prompt, system_prompt), "max_tokens": 4096},
+            timeout=60,
         )
-        return resp.choices[0].message.content
+        resp.raise_for_status()
+        return resp.json()["choices"][0]["message"]["content"]
 
     # ── Public async API ──────────────────────────────────────────────────────
 
-    async def generate(
-        self,
-        prompt: str,
-        system_prompt: Optional[str] = None,
-        task_type: str = "default",
-    ) -> str:
-        """Generate text. Returns string only (backward-compatible)."""
+    async def generate(self, prompt: str, system_prompt: Optional[str] = None, task_type: str = "default") -> str:
         result = await self.generate_with_meta(prompt, system_prompt, task_type)
         return result["text"]
 
     async def generate_with_meta(
-        self,
-        prompt: str,
-        system_prompt: Optional[str] = None,
-        task_type: str = "default",
+        self, prompt: str, system_prompt: Optional[str] = None, task_type: str = "default"
     ) -> dict:
-        """Generate text and return {text, provider, model, label}."""
         route = self._resolve_route(task_type)
-
         if route is None:
             return {
-                "text": (
-                    "No AI provider configured. Add at least GROQ_API_KEY to backend/.env "
-                    "(free key at console.groq.com)."
-                ),
+                "text": "No AI provider configured. Add GROQ_API_KEY to backend/.env (free at console.groq.com).",
                 "provider": "none", "model": "none", "label": "Not configured",
             }
 
@@ -236,33 +180,30 @@ class AIService:
             return {"text": text, "provider": provider, "model": model, "label": label}
 
         except Exception as e:
-            # Provider errored — cascade to the next available one
-            for fallback_provider, fallback_fn in [
-                ("groq",       lambda: asyncio.to_thread(self._gen_groq, prompt, system_prompt, "llama-3.3-70b-versatile") if self.groq_client and provider != "groq" else None),
-                ("openrouter", lambda: asyncio.to_thread(self._gen_openrouter, prompt, system_prompt, OPENROUTER_MODELS.get(task_type, OPENROUTER_MODELS["default"])) if self.openrouter_client and provider != "openrouter" else None),
+            # Cascade fallback
+            for fb_provider, fb_fn in [
+                ("groq",       lambda: asyncio.to_thread(self._gen_groq, prompt, system_prompt, GROQ_FALLBACK["model"])
+                               if self.groq_client and provider != "groq" else None),
+                ("openrouter", lambda: asyncio.to_thread(self._gen_openrouter, prompt, system_prompt, OPENROUTER_MODELS.get(task_type, OPENROUTER_MODELS["default"]))
+                               if self.openrouter_key and provider != "openrouter" else None),
             ]:
-                coro = fallback_fn()
+                coro = fb_fn()
                 if coro is None:
                     continue
                 try:
                     text = await coro
                     return {
-                        "text":     text,
-                        "provider": fallback_provider,
-                        "model":    "llama-3.3-70b-versatile" if fallback_provider == "groq" else OPENROUTER_MODELS.get(task_type, OPENROUTER_MODELS["default"]),
-                        "label":    f"{'Llama 3.3 70B' if fallback_provider == 'groq' else 'OpenRouter'} (fallback from {provider})",
+                        "text": text,
+                        "provider": fb_provider,
+                        "model": GROQ_FALLBACK["model"] if fb_provider == "groq" else OPENROUTER_MODELS.get(task_type, OPENROUTER_MODELS["default"]),
+                        "label": f"{'Llama 3.3 70B' if fb_provider == 'groq' else 'OpenRouter'} (fallback from {provider})",
                     }
                 except Exception:
                     continue
 
             return {"text": f"AI error: {e}", "provider": "none", "model": "none", "label": "Error"}
 
-    async def generate_structured(
-        self,
-        prompt: str,
-        system_prompt: Optional[str] = None,
-        task_type: str = "default",
-    ) -> str:
+    async def generate_structured(self, prompt: str, system_prompt: Optional[str] = None, task_type: str = "default") -> str:
         if system_prompt:
             system_prompt += "\nRespond in clean, concise bullet points or numbered lists. No markdown headers."
         return await self.generate(prompt, system_prompt, task_type)
