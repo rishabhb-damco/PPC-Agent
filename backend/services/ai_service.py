@@ -27,11 +27,9 @@ try:
 except ImportError:
     pass
 
-try:
-    from google import genai as google_genai
-    GEMINI_AVAILABLE = True
-except ImportError:
-    pass
+# Gemini uses direct httpx REST calls — no package needed
+import httpx as _httpx
+GEMINI_AVAILABLE = True  # always available; key check happens at runtime
 
 try:
     from mistralai import Mistral
@@ -87,11 +85,9 @@ class AIService:
             except Exception:
                 pass
 
-        if GEMINI_AVAILABLE and settings.GEMINI_API_KEY:
-            try:
-                self.gemini_client = google_genai.Client(api_key=settings.GEMINI_API_KEY)
-            except Exception:
-                pass
+        # Gemini is "configured" simply if the key is present — no client object needed
+        if settings.GEMINI_API_KEY:
+            self.gemini_client = settings.GEMINI_API_KEY  # store the key as the "client"
 
         if MISTRAL_AVAILABLE and settings.MISTRAL_API_KEY:
             try:
@@ -170,12 +166,13 @@ class AIService:
         return resp.choices[0].message.content
 
     def _gen_gemini(self, prompt: str, system_prompt: Optional[str]) -> str:
+        """Call Gemini REST API directly via httpx — no SDK package required."""
         full = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
-        resp = self.gemini_client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=full,
-        )
-        return resp.text
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_client}"
+        payload = {"contents": [{"role": "user", "parts": [{"text": full}]}]}
+        resp = _httpx.post(url, json=payload, timeout=60)
+        resp.raise_for_status()
+        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
 
     def _gen_mistral(self, prompt: str, system_prompt: Optional[str], model: str) -> str:
         resp = self.mistral_client.chat.complete(
