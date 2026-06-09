@@ -78,6 +78,24 @@ async def trigger_pipeline(
     return {"message": "Full analysis pipeline started", "brand_id": brand_id}
 
 
+@router.delete("/{brand_id}")
+async def delete_brand(
+    brand_id: str,
+    db: AsyncSession = Depends(get_db),
+    _: dict = Depends(get_current_user),
+):
+    from sqlalchemy import delete as sql_delete
+    from models.db_models import Brand, Analysis, ApprovalItem
+    brand = await get_brand(brand_id, db)
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand not found")
+    await db.execute(sql_delete(ApprovalItem).where(ApprovalItem.brand_id == brand_id))
+    await db.execute(sql_delete(Analysis).where(Analysis.brand_id == brand_id))
+    await db.execute(sql_delete(Brand).where(Brand.id == brand_id))
+    await db.commit()
+    return {"deleted": True, "brand_id": brand_id, "name": brand["name"]}
+
+
 @router.get("/{brand_id}/analysis")
 async def get_brand_analysis(
     brand_id: str,

@@ -114,6 +114,7 @@ export const createBrand = (data: object) => api.post('/brands/', data)
 export const getBrandDetail = (id: string) => api.get(`/brands/${id}`)
 export const getBrandAnalysis = (id: string) => api.get(`/brands/${id}/analysis`)
 export const triggerPipeline = (id: string) => api.post(`/brands/${id}/run-pipeline`)
+export const deleteBrand    = (id: string) => api.delete(`/brands/${id}`)
 
 // Approvals
 export const getApprovals = (brandId?: string, status?: string) =>
