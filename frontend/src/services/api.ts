@@ -117,8 +117,16 @@ export const getBrands = () => api.get('/brands/')
 export const createBrand = (data: object) => api.post('/brands/', data)
 export const getBrandDetail = (id: string) => api.get(`/brands/${id}`)
 export const getBrandAnalysis = (id: string) => api.get(`/brands/${id}/analysis`)
-export const triggerPipeline = (id: string) => api.post(`/brands/${id}/run-pipeline`)
-export const deleteBrand    = (id: string) => api.delete(`/brands/${id}`)
+export const triggerPipeline  = (id: string) => api.post(`/brands/${id}/run-pipeline`)
+export const deleteBrand      = (id: string) => api.delete(`/brands/${id}`)
+export const updateBrandTargets = (id: string, targets: {
+  target_cpl?: number | null
+  target_roas?: number | null
+  target_monthly_leads?: number | null
+  target_conv_rate?: number | null
+  target_monthly_spend?: number | null
+  currency?: string
+}) => api.patch(`/brands/${id}/targets`, targets)
 
 // Approvals
 export const getApprovals = (brandId?: string, status?: string) =>

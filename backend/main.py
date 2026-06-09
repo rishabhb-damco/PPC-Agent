@@ -2,13 +2,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from database import create_tables
+from database import create_tables, run_column_migrations
 from routes import dashboard, campaigns, agents, reports, brands, approvals, extract, auth, alerts
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_tables()
+    await run_column_migrations()
     yield
 
 
