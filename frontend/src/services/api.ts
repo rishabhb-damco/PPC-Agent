@@ -59,6 +59,7 @@ export const getAgentRoster = () => api.get('/dashboard/agent-roster')
 // Campaigns
 export const getGoogleCampaigns = (status?: string) =>
   api.get(`/campaigns/google${status ? `?status=${status}` : ''}`)
+export const getGoogleWow = () => api.get('/campaigns/google/wow')
 export const getMetaCampaigns = (brandId?: string, status?: string) => {
   const params = new URLSearchParams()
   if (brandId) params.append('brand_id', brandId)
@@ -94,8 +95,11 @@ export const getStaticBrief = (input: string, context?: object) =>
   api.post('/agents/a6/static-brief', { input, context })
 export const getVideoScript = (input: string, context?: object) =>
   api.post('/agents/a6/video-script', { input, context })
-export const getWeeklyReport = () => api.get('/agents/a7/weekly-report')
-export const getScorecard = () => api.get('/agents/a7/scorecard')
+export const getWeeklyReport   = () => api.get('/agents/a7/weekly-report')
+export const getScorecard      = () => api.get('/agents/a7/scorecard')
+export const getPreCallBrief   = (brandName: string, context: string) =>
+  api.post('/agents/a7/pre-call-brief', { input: context, context: { brand_name: brandName } })
+export const getLeadQuality    = () => api.get('/lead-quality/wellspring')
 
 // Reports
 export const getReportsWeekly = () => api.get('/reports/weekly')
@@ -115,8 +119,10 @@ export const sendAlertSummary = (includeBrands = true) =>
 // Brands
 export const getBrands = () => api.get('/brands/')
 export const createBrand = (data: object) => api.post('/brands/', data)
-export const getBrandDetail = (id: string) => api.get(`/brands/${id}`)
+export const getBrandDetail   = (id: string) => api.get(`/brands/${id}`)
 export const getBrandAnalysis = (id: string) => api.get(`/brands/${id}/analysis`)
+export const getPacingSummary = () => api.get('/brands/pacing/all')
+export const getAllHealth     = () => api.get('/health/all')
 export const triggerPipeline  = (id: string) => api.post(`/brands/${id}/run-pipeline`)
 export const deleteBrand      = (id: string) => api.delete(`/brands/${id}`)
 export const updateBrandTargets = (id: string, targets: {

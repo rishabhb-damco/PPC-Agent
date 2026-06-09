@@ -23,6 +23,7 @@ interface Brand {
   target_conv_rate?:     number | null
   target_monthly_spend?: number | null
   currency?:             string
+  goals?:                string
 }
 
 interface BrandContextType {

@@ -196,6 +196,65 @@ class GoogleAdsService:
             "last_30d_conversions": int(m.conversions),
         }
 
+    def _fetch_wow_sync(self) -> dict:
+        """Fetch last 14 days with daily segments, split into current/prior week."""
+        from datetime import date, timedelta
+        rows = self._query("""
+            SELECT
+              segments.date,
+              metrics.cost_micros,
+              metrics.conversions,
+              metrics.clicks,
+              metrics.impressions
+            FROM campaign
+            WHERE segments.date DURING LAST_14_DAYS
+              AND campaign.status != 'REMOVED'
+        """)
+        today = date.today()
+        current_spend = current_conv = current_clicks = current_impr = 0
+        prior_spend   = prior_conv   = prior_clicks   = prior_impr   = 0
+
+        for row in rows:
+            row_date = date.fromisoformat(row.segments.date)
+            days_ago = (today - row_date).days
+            spend = row.metrics.cost_micros / 1_000_000
+            conv  = row.metrics.conversions
+            clicks = row.metrics.clicks
+            impr  = row.metrics.impressions
+            if days_ago <= 7:
+                current_spend += spend; current_conv += conv
+                current_clicks += clicks; current_impr += impr
+            else:
+                prior_spend += spend; prior_conv += conv
+                prior_clicks += clicks; prior_impr += impr
+
+        def pct(cur, prev):
+            if prev == 0:
+                return None
+            return round(((cur - prev) / prev) * 100, 1)
+
+        cur_cpl  = round(current_spend / current_conv, 2) if current_conv > 0 else None
+        prev_cpl = round(prior_spend   / prior_conv,   2) if prior_conv   > 0 else None
+        cur_ctr  = round((current_clicks / current_impr) * 100, 2) if current_impr > 0 else None
+        prev_ctr = round((prior_clicks   / prior_impr)   * 100, 2) if prior_impr   > 0 else None
+
+        return {
+            "current": {
+                "spend": round(current_spend, 2), "conversions": int(current_conv),
+                "cpl": cur_cpl, "ctr": cur_ctr,
+            },
+            "previous": {
+                "spend": round(prior_spend, 2), "conversions": int(prior_conv),
+                "cpl": prev_cpl, "ctr": prev_ctr,
+            },
+            "changes": {
+                "spend_pct":       pct(current_spend, prior_spend),
+                "conversions_pct": pct(current_conv, prior_conv),
+                "cpl_pct":         pct(cur_cpl, prev_cpl) if cur_cpl and prev_cpl else None,
+                "ctr_pct":         pct(cur_ctr, prev_ctr) if cur_ctr and prev_ctr else None,
+            },
+        }
+
     # ── Public async API ──────────────────────────────────────────────────────
 
     async def get_campaigns(self, date_range: str = "LAST_30_DAYS") -> Optional[List[dict]]:
@@ -223,6 +282,15 @@ class GoogleAdsService:
             return await asyncio.to_thread(self._fetch_search_terms_sync, campaign_id)
         except Exception as e:
             print(f"[GoogleAdsService] get_search_terms error: {e}")
+            return None
+
+    async def get_wow_comparison(self) -> Optional[dict]:
+        if not self.is_configured:
+            return None
+        try:
+            return await asyncio.to_thread(self._fetch_wow_sync)
+        except Exception as e:
+            print(f"[GoogleAdsService] get_wow_comparison error: {e}")
             return None
 
     async def get_account_summary(self) -> Optional[dict]:

@@ -137,3 +137,12 @@ async def weekly_report():
 @router.get("/a7/scorecard")
 async def kpi_scorecard():
     return await a7_reporting.run({"type": "scorecard", "input": "Generate KPI scorecard"})
+
+
+@router.post("/a7/pre-call-brief")
+async def pre_call_brief(req: AgentRunRequest):
+    return await a7_reporting.run({
+        "type": "pre_call",
+        "brand_name": req.context.get("brand_name", "the client"),
+        "input": req.input,
+    })

@@ -11,6 +11,7 @@ import { useBrand } from '../context/BrandContext'
 import {
   getDashboardOverview, getAlerts, getChartData,
   getApprovals, triggerPipeline, getAiStatus, sendAlertSummary,
+  getPacingSummary, getAllHealth,
 } from '../services/api'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -63,10 +64,12 @@ export default function Dashboard() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
   const [chartData, setChartData] = useState<any[]>([])
   const [approvals, setApprovals] = useState<any[]>([])
-  const [runningId, setRunningId]     = useState<string | null>(null)
-  const [aiStatus, setAiStatus]       = useState<any>(null)
+  const [runningId, setRunningId]       = useState<string | null>(null)
+  const [aiStatus, setAiStatus]         = useState<any>(null)
+  const [pacing, setPacing]             = useState<any[]>([])
+  const [healthScores, setHealthScores] = useState<Record<string, string>>({})
   const [sendingEmail, setSendingEmail] = useState(false)
-  const [emailSent, setEmailSent]     = useState(false)
+  const [emailSent, setEmailSent]       = useState(false)
 
   const handleSendAlertEmail = async () => {
     setSendingEmail(true)
@@ -85,6 +88,12 @@ export default function Dashboard() {
     getChartData().then(r => setChartData(r.data.data ?? [])).catch(() => {})
     getApprovals(undefined, 'pending').then(r => setApprovals(r.data.items ?? [])).catch(() => {})
     getAiStatus().then(r => setAiStatus(r.data)).catch(() => {})
+    getPacingSummary().then(r => setPacing(r.data.pacing ?? [])).catch(() => {})
+    getAllHealth().then(r => {
+      const map: Record<string, string> = {}
+      ;(r.data.health ?? []).forEach((h: any) => { map[h.brand_id] = h.score })
+      setHealthScores(map)
+    }).catch(() => {})
   }, [])
 
   const visibleAlerts = alerts.filter(a => !dismissed.has(a.id))
@@ -192,10 +201,13 @@ export default function Dashboard() {
               <tbody className="divide-y divide-gray-800/60">
                 {brands.map(brand => {
                   const pl = pipelineLabel[brand.analysis_status] ?? pipelineLabel.never_run
-                  const pending    = brand.approval_stats?.pending ?? 0
+                  const pending         = brand.approval_stats?.pending ?? 0
                   const highImpactBrand = brand.approval_stats?.high_impact_pending ?? 0
-                  const isRunning  = brand.analysis_status === 'running' || runningId === brand.id
-                  const isActive   = activeBrand?.id === brand.id
+                  const isRunning = brand.analysis_status === 'running' || runningId === brand.id
+                  const isActive  = activeBrand?.id === brand.id
+                  const healthScore = healthScores[brand.id]
+                  const pacingData  = pacing.find(p => p.brand_id === brand.id)
+                  const healthDot = healthScore === 'red' ? '#F87171' : healthScore === 'amber' ? 'var(--warning)' : healthScore === 'green' ? 'var(--success)' : 'var(--text-hint)'
 
                   return (
                     <tr
@@ -239,18 +251,22 @@ export default function Dashboard() {
                         </div>
                       </td>
 
-                      {/* Pipeline status */}
+                      {/* Health + Pacing */}
                       <td className="px-3 py-2.5">
                         <div className="flex items-center gap-1.5">
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${pl.dot}`} />
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: healthDot }} />
                           <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                            {pl.label}
-                            {brand.last_analysed && brand.analysis_status === 'completed' && (
-                              <span className="ml-1.5" style={{ color: 'var(--text-hint)' }}>
-                                {new Date(brand.last_analysed).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                              </span>
-                            )}
+                            {pacingData ? (
+                              pacingData.status === 'on_pace' ? 'On pace' :
+                              pacingData.status === 'over_pacing' ? `Over ${Math.abs(pacingData.variance_pct)}%` :
+                              pacingData.status === 'under_pacing' ? `Under ${Math.abs(pacingData.variance_pct)}%` : 'No budget'
+                            ) : pl.label}
                           </span>
+                          {pacingData?.monthly_budget > 0 && (
+                            <span className="text-[10px]" style={{ color: 'var(--text-hint)' }}>
+                              {pacingData.currency === 'INR' ? '₹' : '$'}{(pacingData.spend_to_date || 0).toLocaleString()} / {pacingData.currency === 'INR' ? '₹' : '$'}{(pacingData.monthly_budget || 0).toLocaleString()}
+                            </span>
+                          )}
                         </div>
                       </td>
 
