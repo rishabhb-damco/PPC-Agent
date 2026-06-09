@@ -29,18 +29,25 @@ const pipelineLabel: Record<string, { label: string; dot: string }> = {
   error:     { label: 'Failed',       dot: 'bg-red-400' },
 }
 
-function FocusPill({ count, label, color, onClick }: { count: number; label: string; color: string; onClick?: () => void }) {
+function FocusPill({
+  count, label, onClick,
+  activeColor, activeBg, activeBorder
+}: {
+  count: number; label: string; onClick?: () => void
+  activeColor?: string; activeBg?: string; activeBorder?: string
+}) {
+  const active = count > 0
   return (
     <button
-      onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-full border text-sm font-medium transition-colors ${
-        count > 0
-          ? `${color} cursor-pointer`
-          : 'border-gray-800 text-gray-600 cursor-default'
-      }`}
+      onClick={active ? onClick : undefined}
+      className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-150"
+      style={active
+        ? { backgroundColor: activeBg, border: `1px solid ${activeBorder}`, color: activeColor, cursor: 'pointer' }
+        : { backgroundColor: 'transparent', border: `1px solid var(--border-default)`, color: 'var(--text-hint)', cursor: 'default' }
+      }
     >
-      <span className={`text-base font-bold ${count > 0 ? '' : 'text-gray-700'}`}>{count}</span>
-      {label}
+      <span className="text-sm font-bold tabular-nums">{count}</span>
+      <span className="opacity-80">{label}</span>
     </button>
   )
 }
@@ -106,25 +113,33 @@ export default function Dashboard() {
         <FocusPill
           count={visibleAlerts.filter(a => a.severity === 'critical' || a.severity === 'error').length}
           label="critical alerts"
-          color="border-red-700/60 text-red-400 bg-red-950/20 hover:bg-red-950/40"
+          activeColor="#F87171"
+          activeBg="var(--error-dim)"
+          activeBorder="var(--error-border)"
           onClick={() => document.getElementById('alert-feed')?.scrollIntoView({ behavior: 'smooth' })}
         />
         <FocusPill
           count={highImpact}
-          label="high-impact approvals"
-          color="border-yellow-700/60 text-yellow-400 bg-yellow-950/20 hover:bg-yellow-950/40"
+          label="high-impact"
+          activeColor="var(--warning)"
+          activeBg="var(--warning-dim)"
+          activeBorder="var(--warning-border)"
           onClick={() => navigate('/approval-queue')}
         />
         <FocusPill
           count={totalPending}
-          label="total pending"
-          color="border-blue-700/60 text-blue-400 bg-blue-950/20 hover:bg-blue-950/40"
+          label="pending approvals"
+          activeColor="#818CF8"
+          activeBg="var(--brand-dim)"
+          activeBorder="var(--brand-border)"
           onClick={() => navigate('/approval-queue')}
         />
         <FocusPill
           count={activeBrands}
           label="clients active"
-          color="border-green-700/60 text-green-400 bg-green-950/20"
+          activeColor="var(--success)"
+          activeBg="var(--success-dim)"
+          activeBorder="var(--success-border)"
         />
       </div>
 
@@ -419,8 +434,15 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={14} className="text-blue-400" />
             <h3 className="text-sm font-semibold text-gray-200">Google Ads</h3>
-            <span className="ml-auto text-[10px] text-gray-600 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">
-              {kpis ? 'mock data' : 'loading'}
+            <span
+              className="ml-auto text-[10px] px-2 py-0.5 rounded-md font-medium"
+              style={{
+                backgroundColor: kpis?.data_source === 'live' ? 'var(--success-dim)' : 'rgba(113,113,122,0.10)',
+                color: kpis?.data_source === 'live' ? 'var(--success)' : 'var(--text-hint)',
+                border: `1px solid ${kpis?.data_source === 'live' ? 'var(--success-border)' : 'var(--border-default)'}`,
+              }}
+            >
+              {kpis?.data_source === 'live' ? 'live' : kpis ? 'mock' : 'loading'}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-4">
@@ -447,8 +469,15 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 mb-4">
             <Share2 size={14} className="text-purple-400" />
             <h3 className="text-sm font-semibold text-gray-200">Meta Ads</h3>
-            <span className="ml-auto text-[10px] text-gray-600 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">
-              {kpis ? 'mock data' : 'loading'}
+            <span
+              className="ml-auto text-[10px] px-2 py-0.5 rounded-md font-medium"
+              style={{
+                backgroundColor: kpis?.data_source === 'live' ? 'var(--success-dim)' : 'rgba(113,113,122,0.10)',
+                color: kpis?.data_source === 'live' ? 'var(--success)' : 'var(--text-hint)',
+                border: `1px solid ${kpis?.data_source === 'live' ? 'var(--success-border)' : 'var(--border-default)'}`,
+              }}
+            >
+              {kpis?.data_source === 'live' ? 'live' : kpis ? 'mock' : 'loading'}
             </span>
           </div>
           <div className="grid grid-cols-3 gap-4">

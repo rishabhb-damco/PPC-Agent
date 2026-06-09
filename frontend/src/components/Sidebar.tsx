@@ -1,66 +1,86 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, TrendingUp, Share2, Search, ShieldCheck,
-  Paintbrush, FileBarChart2, Zap, CheckSquare, Plus,
-  ChevronRight, Building2,
+  Paintbrush, FileBarChart2, Zap, CheckSquare, Plus, ChevronRight, Building2,
 } from 'lucide-react'
 import { useBrand } from '../context/BrandContext'
 
 const platformNav = [
-  { label: 'Google Ads',      to: '/google-ads',       icon: TrendingUp },
-  { label: 'Meta Ads',        to: '/meta-ads',         icon: Share2 },
-  { label: 'Research & Intel', to: '/research',        icon: Search },
-  { label: 'Technical Health', to: '/technical-health', icon: ShieldCheck },
-  { label: 'Copy & Creative', to: '/copy-creative',    icon: Paintbrush },
-  { label: 'Reports',         to: '/reports',          icon: FileBarChart2 },
+  { label: 'Google Ads',       to: '/google-ads',        icon: TrendingUp   },
+  { label: 'Meta Ads',         to: '/meta-ads',          icon: Share2        },
+  { label: 'Research & Intel', to: '/research',          icon: Search        },
+  { label: 'Technical Health', to: '/technical-health',  icon: ShieldCheck   },
+  { label: 'Copy & Creative',  to: '/copy-creative',     icon: Paintbrush    },
+  { label: 'Reports',          to: '/reports',           icon: FileBarChart2 },
 ]
+
+const activeStyle = {
+  backgroundColor: 'rgba(99,102,241,0.12)',
+  border: '1px solid rgba(99,102,241,0.22)',
+  color: '#FFFFFF',
+}
+
+const inactiveCls = 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.04] border border-transparent'
 
 export default function Sidebar() {
   const { brands, activeBrand, setActiveBrand } = useBrand()
-  const navigate = useNavigate()
+  const navigate    = useNavigate()
   const totalPending = brands.reduce((sum, b) => sum + (b.approval_stats?.pending ?? 0), 0)
 
   return (
-    <aside className="w-60 shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col">
-
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-gray-800">
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0">
-          <Zap size={16} className="text-white" />
+    <aside
+      className="w-[232px] shrink-0 flex flex-col border-r"
+      style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+    >
+      {/* ── Logo ───────────────────────────────────────────────────────────── */}
+      <div
+        className="flex items-center gap-3 px-5 py-[18px] border-b"
+        style={{ borderColor: 'var(--border-subtle)' }}
+      >
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{ backgroundColor: '#6366F1', boxShadow: '0 2px 8px rgba(99,102,241,0.30)' }}
+        >
+          <Zap size={15} className="text-white" />
         </div>
         <div>
-          <p className="text-sm font-bold text-white leading-none">PPC Agent</p>
-          <p className="text-[10px] text-gray-500 mt-0.5">Command Centre</p>
+          <p className="text-sm font-bold text-white leading-none tracking-tight">PPC Agent</p>
+          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-hint)' }}>Command Centre</p>
         </div>
       </div>
 
-      {/* Scrollable nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
+      {/* ── Navigation ────────────────────────────────────────────────────── */}
+      <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-5">
 
-        {/* Command Centre */}
+        {/* Primary */}
         <div>
           <NavLink
             to="/dashboard"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                isActive
-                  ? 'bg-white/[0.07] text-white border border-white/10'
-                  : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.04]'
+              `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                isActive ? '' : inactiveCls
               }`
             }
+            style={({ isActive }) => isActive ? activeStyle : undefined}
           >
-            <LayoutDashboard size={16} />
+            <LayoutDashboard size={15} style={{ color: 'inherit', opacity: 0.85 }} />
             Command Centre
           </NavLink>
         </div>
 
-        {/* Clients section */}
+        {/* Clients */}
         <div>
-          <div className="flex items-center justify-between px-2 mb-1.5">
-            <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider">Clients</p>
+          <div className="flex items-center justify-between px-2 mb-2">
+            <span
+              className="text-[10px] font-semibold uppercase tracking-[0.08em]"
+              style={{ color: 'var(--text-hint)' }}
+            >
+              Clients
+            </span>
             <button
               onClick={() => navigate('/brand-setup')}
-              className="text-gray-600 hover:text-blue-400 transition-colors"
+              className="transition-colors rounded-md p-0.5 hover:bg-white/[0.06]"
+              style={{ color: 'var(--text-hint)' }}
               title="Add client"
             >
               <Plus size={12} />
@@ -70,9 +90,10 @@ export default function Sidebar() {
           {brands.length === 0 ? (
             <button
               onClick={() => navigate('/brand-setup')}
-              className="flex items-center gap-2 px-3 py-2 w-full text-left text-xs text-gray-600 hover:text-blue-400 hover:bg-gray-800 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-3 py-2 w-full text-left text-xs rounded-lg transition-colors"
+              style={{ color: 'var(--text-hint)' }}
             >
-              <Plus size={12} /> Add first client
+              <Plus size={11} /> Add first client
             </button>
           ) : (
             <div className="space-y-0.5">
@@ -83,16 +104,24 @@ export default function Sidebar() {
                   <button
                     key={brand.id}
                     onClick={() => { setActiveBrand(brand); navigate('/dashboard') }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-colors text-left group ${
-                      isActive
-                        ? 'bg-gray-800 text-gray-100'
-                        : 'text-gray-500 hover:text-gray-200 hover:bg-gray-800/60'
-                    }`}
+                    className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 text-left"
+                    style={isActive
+                      ? { backgroundColor: 'rgba(99,102,241,0.10)', color: '#E4E4E7' }
+                      : { color: 'var(--text-muted)' }
+                    }
+                    onMouseEnter={e => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)' }}
+                    onMouseLeave={e => { if (!isActive) e.currentTarget.style.backgroundColor = '' }}
                   >
-                    <Building2 size={13} className={isActive ? 'text-blue-400' : 'text-gray-600 group-hover:text-gray-400'} />
+                    <Building2
+                      size={12}
+                      style={{ color: isActive ? '#818CF8' : 'var(--text-hint)', flexShrink: 0 }}
+                    />
                     <span className="text-xs font-medium truncate flex-1">{brand.name}</span>
                     {pending > 0 && (
-                      <span className="text-[9px] font-bold bg-yellow-900/60 text-yellow-400 px-1.5 py-0.5 rounded-full shrink-0">
+                      <span
+                        className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                        style={{ backgroundColor: 'var(--warning-dim)', color: 'var(--warning)' }}
+                      >
                         {pending}
                       </span>
                     )}
@@ -105,21 +134,25 @@ export default function Sidebar() {
 
         {/* Platform tools */}
         <div>
-          <p className="text-[10px] font-semibold text-gray-600 uppercase tracking-wider px-2 mb-1.5">Platform Tools</p>
+          <span
+            className="block px-2 mb-2 text-[10px] font-semibold uppercase tracking-[0.08em]"
+            style={{ color: 'var(--text-hint)' }}
+          >
+            Platform Tools
+          </span>
           <div className="space-y-0.5">
             {platformNav.map(({ label, to, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-white/[0.07] text-white border border-white/10'
-                      : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.04]'
+                  `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                    isActive ? '' : inactiveCls
                   }`
                 }
+                style={({ isActive }) => isActive ? activeStyle : undefined}
               >
-                <Icon size={15} />
+                <Icon size={14} style={{ opacity: 0.85 }} />
                 {label}
               </NavLink>
             ))}
@@ -131,17 +164,19 @@ export default function Sidebar() {
           <NavLink
             to="/approval-queue"
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                isActive
-                  ? 'bg-white/[0.07] text-white border border-white/10'
-                  : 'text-gray-500 hover:text-gray-200 hover:bg-white/[0.04]'
+              `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+                isActive ? '' : inactiveCls
               }`
             }
+            style={({ isActive }) => isActive ? activeStyle : undefined}
           >
-            <CheckSquare size={15} />
+            <CheckSquare size={14} style={{ opacity: 0.85 }} />
             <span className="flex-1">Approval Queue</span>
             {totalPending > 0 && (
-              <span className="bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+              <span
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center"
+                style={{ backgroundColor: 'var(--warning)', color: '#09090B' }}
+              >
                 {totalPending > 99 ? '99+' : totalPending}
               </span>
             )}
@@ -150,18 +185,20 @@ export default function Sidebar() {
 
       </nav>
 
-      {/* Bottom: Add client shortcut */}
-      <div className="px-3 py-3 border-t border-gray-800">
+      {/* ── Footer ────────────────────────────────────────────────────────── */}
+      <div className="px-2.5 py-3 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
         <button
           onClick={() => navigate('/brand-setup')}
-          className="flex items-center gap-2 w-full px-3 py-2 text-xs text-gray-500 hover:text-blue-400 hover:bg-gray-800 rounded-lg transition-colors"
+          className="flex items-center gap-2 w-full px-3 py-2 text-xs rounded-lg transition-all duration-150"
+          style={{ color: 'var(--text-hint)' }}
+          onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#818CF8' }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = ''; e.currentTarget.style.color = 'var(--text-hint)' }}
         >
-          <Plus size={13} />
+          <Plus size={12} />
           <span>Add new client</span>
-          <ChevronRight size={11} className="ml-auto" />
+          <ChevronRight size={10} className="ml-auto opacity-50" />
         </button>
       </div>
-
     </aside>
   )
 }

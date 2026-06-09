@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { TrendingUp, TrendingDown } from 'lucide-react'
 
 interface KPICardProps {
   label: string
@@ -15,23 +15,52 @@ export default function KPICard({
 }: KPICardProps) {
   const isPositive = change !== undefined && change > 0
   const isNegative = change !== undefined && change < 0
-  const isNeutral = change === undefined || change === 0
 
   return (
-    <div className={`card ${highlight ? 'border-blue-700/50 bg-blue-950/20' : ''}`}>
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-2xl font-bold text-white mt-1">
+    <div
+      className="card"
+      style={highlight ? {
+        borderColor: 'rgba(99,102,241,0.28)',
+        background: 'linear-gradient(135deg, rgba(99,102,241,0.07) 0%, #1C1C1F 55%)',
+      } : undefined}
+    >
+      <p
+        className="text-[10px] font-semibold uppercase tracking-[0.1em] mb-3"
+        style={{ color: 'var(--text-hint)' }}
+      >
+        {label}
+      </p>
+
+      <p
+        className="text-[28px] font-bold leading-none tracking-tight"
+        style={{ color: 'var(--text-primary)' }}
+      >
         {prefix}{typeof value === 'number' ? value.toLocaleString() : value}{suffix}
       </p>
+
       {change !== undefined && (
-        <div className={`flex items-center gap-1 mt-2 text-xs font-medium ${
-          isPositive ? 'text-green-400' : isNegative ? 'text-red-400' : 'text-gray-400'
-        }`}>
-          {isPositive ? <TrendingUp size={12} /> : isNegative ? <TrendingDown size={12} /> : <Minus size={12} />}
-          <span>{change > 0 ? '+' : ''}{change}% vs last week</span>
+        <div
+          className="inline-flex items-center gap-1 mt-3 px-2 py-0.5 rounded-md text-[11px] font-semibold"
+          style={{
+            backgroundColor: isPositive
+              ? 'var(--success-dim)'
+              : isNegative
+              ? 'var(--error-dim)'
+              : 'rgba(113,113,122,0.10)',
+            color: isPositive ? 'var(--success)' : isNegative ? '#F87171' : 'var(--text-muted)',
+          }}
+        >
+          {isPositive && <TrendingUp size={11} />}
+          {isNegative && <TrendingDown size={11} />}
+          {change > 0 ? '+' : ''}{change}% vs last week
         </div>
       )}
-      {subLabel && <p className="text-xs text-gray-500 mt-1">{subLabel}</p>}
+
+      {subLabel && (
+        <p className="text-[11px] mt-2" style={{ color: 'var(--text-hint)' }}>
+          {subLabel}
+        </p>
+      )}
     </div>
   )
 }

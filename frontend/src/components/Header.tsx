@@ -5,12 +5,12 @@ import { useBrand } from '../context/BrandContext'
 import { useAuth } from '../context/AuthContext'
 
 export default function Header() {
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme }   = useTheme()
   const { activeBrand, refreshBrands } = useBrand()
-  const { user, logout } = useAuth()
+  const { user, logout }         = useAuth()
   const pendingCount = activeBrand?.approval_stats?.pending ?? 0
   const initials = user?.full_name
-    ? user.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    ? user.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
     : 'RB'
 
   const [time] = useState(() =>
@@ -20,48 +20,86 @@ export default function Header() {
     })
   )
 
+  const iconBtn = "p-1.5 rounded-lg transition-all duration-150 hover:bg-white/[0.06]"
+
   return (
-    <header className="h-14 shrink-0 bg-gray-900 border-b border-gray-800 flex items-center justify-between px-6 transition-colors duration-200">
-      <div>
-        <p className="text-sm text-gray-400">
-          Last synced: <span className="text-gray-200">{time}</span>
-          {activeBrand && (
-            <span className="ml-2 text-xs text-blue-400 font-medium">· {activeBrand.name}</span>
-          )}
+    <header
+      className="h-[52px] shrink-0 flex items-center justify-between px-6 border-b"
+      style={{ backgroundColor: 'var(--bg-surface)', borderColor: 'var(--border-subtle)' }}
+    >
+      {/* Left — sync time + active brand */}
+      <div className="flex items-center gap-2">
+        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+          Last synced: <span style={{ color: 'var(--text-secondary)' }}>{time}</span>
         </p>
+        {activeBrand && (
+          <>
+            <span style={{ color: 'var(--border-strong)' }}>·</span>
+            <span
+              className="text-xs font-medium"
+              style={{ color: '#818CF8' }}
+            >
+              {activeBrand.name}
+            </span>
+          </>
+        )}
       </div>
-      <div className="flex items-center gap-3">
+
+      {/* Right — actions */}
+      <div className="flex items-center gap-1">
+
         <button
           onClick={refreshBrands}
-          className="text-gray-400 hover:text-gray-100 transition-colors"
+          className={iconBtn}
+          style={{ color: 'var(--text-muted)' }}
           title="Refresh"
         >
-          <RefreshCw size={16} />
+          <RefreshCw size={14} />
         </button>
-        {/* Theme toggle */}
+
         <button
           onClick={toggleTheme}
-          className="text-gray-400 hover:text-gray-100 transition-colors p-1 rounded-lg hover:bg-gray-800"
+          className={iconBtn}
+          style={{ color: 'var(--text-muted)' }}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
-          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
         </button>
-        <button className="relative text-gray-400 hover:text-gray-100 transition-colors">
-          <Bell size={18} />
+
+        <button
+          className={`${iconBtn} relative`}
+          style={{ color: 'var(--text-muted)' }}
+        >
+          <Bell size={15} />
           {pendingCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-500 rounded-full text-black text-[9px] flex items-center justify-center font-bold">
+            <span
+              className="absolute -top-0.5 -right-0.5 w-[14px] h-[14px] rounded-full text-[8px] flex items-center justify-center font-bold"
+              style={{ backgroundColor: 'var(--warning)', color: '#09090B' }}
+            >
               {pendingCount > 9 ? '9+' : pendingCount}
             </span>
           )}
         </button>
+
+        <div className="w-px h-4 mx-1" style={{ backgroundColor: 'var(--border-default)' }} />
+
         <button
           onClick={logout}
-          className="text-gray-400 hover:text-red-400 transition-colors p-1 rounded-lg hover:bg-gray-800"
+          className={iconBtn}
+          style={{ color: 'var(--text-muted)' }}
+          onMouseEnter={e => (e.currentTarget.style.color = '#F87171')}
+          onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
           title="Sign out"
         >
-          <LogOut size={16} />
+          <LogOut size={14} />
         </button>
-        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-bold text-white" title={user?.email}>
+
+        {/* Avatar */}
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white ml-1 cursor-default"
+          style={{ backgroundColor: '#6366F1' }}
+          title={user?.email}
+        >
           {initials}
         </div>
       </div>
