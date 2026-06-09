@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     MISTRAL_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
+    RESEND_API_KEY: str = ""
+    ALERT_EMAIL_TO: str = "rishabhb@damcogroup.com"
     CORS_ORIGINS: str = "*"
     ENVIRONMENT: str = "development"
     # SQLite for local dev; set to postgresql+asyncpg://... for production

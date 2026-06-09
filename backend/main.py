@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from database import create_tables
-from routes import dashboard, campaigns, agents, reports, brands, approvals, extract, auth
+from routes import dashboard, campaigns, agents, reports, brands, approvals, extract, auth, alerts
 
 
 @asynccontextmanager
@@ -36,6 +36,7 @@ app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
 app.include_router(brands.router, prefix="/api/v1/brands", tags=["Brands"])
 app.include_router(approvals.router, prefix="/api/v1/approvals", tags=["Approvals"])
 app.include_router(extract.router, prefix="/api/v1/extract", tags=["Extract"])
+app.include_router(alerts.router, prefix="/api/v1/alerts", tags=["Alerts"])
 
 
 @app.get("/")

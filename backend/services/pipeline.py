@@ -222,6 +222,31 @@ async def run_full_pipeline(brand_id: str) -> dict:
 
             await save_analysis(brand_id, analysis, db)
             await update_brand_status(brand_id, "completed", db)
+
+            # ── Auto-email: send alert if high-impact items were found ──────────
+            try:
+                from services.email_service import send_alert_email
+                from services.brand_store import get_approval_queue, get_approval_stats
+                items = await get_approval_queue(db, brand_id=brand_id, status="pending")
+                high_impact_items = [i for i in items if i["impact"] == "high"]
+                if high_impact_items:
+                    alerts_for_email = [
+                        {
+                            "id": i["id"],
+                            "severity": "error",
+                            "title": i["title"],
+                            "description": i["description"][:150],
+                            "platform": i["category"].replace("_", " ").title(),
+                            "campaign": None,
+                        }
+                        for i in high_impact_items[:8]
+                    ]
+                    brand_with_stats = {**analysis, "name": name, "industry": industry,
+                                        "approval_stats": await get_approval_stats(db, brand_id)}
+                    await send_alert_email(alerts_for_email, [brand_with_stats], source="pipeline")
+            except Exception:
+                pass  # Never let email failure block the pipeline result
+
             return {"status": "completed", "brand_id": brand_id, "analysis": analysis}
 
         except Exception as e:

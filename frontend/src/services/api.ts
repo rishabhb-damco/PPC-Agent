@@ -108,6 +108,10 @@ export const extractBrandFromUrl = (url: string) => api.post('/extract/from-url'
 // AI provider status
 export const getAiStatus = () => api.get('/dashboard/ai-status')
 
+// Email alerts
+export const sendAlertSummary = (includeBrands = true) =>
+  api.post('/alerts/send-summary', { include_brands: includeBrands })
+
 // Brands
 export const getBrands = () => api.get('/brands/')
 export const createBrand = (data: object) => api.post('/brands/', data)

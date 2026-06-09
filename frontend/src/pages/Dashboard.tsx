@@ -5,12 +5,12 @@ import {
 } from 'recharts'
 import {
   AlertTriangle, XCircle, Info, CheckCircle, Clock, Loader2,
-  Plus, ChevronRight, Play, Zap, X, TrendingUp, Share2,
+  Plus, ChevronRight, Play, Zap, X, TrendingUp, Share2, Mail,
 } from 'lucide-react'
 import { useBrand } from '../context/BrandContext'
 import {
   getDashboardOverview, getAlerts, getChartData,
-  getApprovals, triggerPipeline, getAiStatus,
+  getApprovals, triggerPipeline, getAiStatus, sendAlertSummary,
 } from '../services/api'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -63,8 +63,21 @@ export default function Dashboard() {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set())
   const [chartData, setChartData] = useState<any[]>([])
   const [approvals, setApprovals] = useState<any[]>([])
-  const [runningId, setRunningId]   = useState<string | null>(null)
-  const [aiStatus, setAiStatus]     = useState<any>(null)
+  const [runningId, setRunningId]     = useState<string | null>(null)
+  const [aiStatus, setAiStatus]       = useState<any>(null)
+  const [sendingEmail, setSendingEmail] = useState(false)
+  const [emailSent, setEmailSent]     = useState(false)
+
+  const handleSendAlertEmail = async () => {
+    setSendingEmail(true)
+    setEmailSent(false)
+    try {
+      await sendAlertSummary(true)
+      setEmailSent(true)
+      setTimeout(() => setEmailSent(false), 4000)
+    } catch { /* silent */ }
+    finally { setSendingEmail(false) }
+  }
 
   useEffect(() => {
     getDashboardOverview().then(r => setKpis(r.data)).catch(() => {})
@@ -311,14 +324,29 @@ export default function Dashboard() {
                 <span className="ml-2 text-xs text-gray-500">({visibleAlerts.length} active)</span>
               )}
             </h2>
-            {dismissed.size > 0 && (
-              <button
-                className="text-xs text-gray-500 hover:text-gray-300"
-                onClick={() => setDismissed(new Set())}
-              >
-                Show dismissed
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {dismissed.size > 0 && (
+                <button className="text-xs text-gray-500 hover:text-gray-300" onClick={() => setDismissed(new Set())}>
+                  Show dismissed
+                </button>
+              )}
+              {visibleAlerts.length > 0 && (
+                <button
+                  onClick={handleSendAlertEmail}
+                  disabled={sendingEmail}
+                  className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg transition-all"
+                  style={{
+                    backgroundColor: emailSent ? 'var(--success-dim)' : 'var(--bg-input)',
+                    border: `1px solid ${emailSent ? 'var(--success-border)' : 'var(--border-strong)'}`,
+                    color: emailSent ? 'var(--success)' : 'var(--text-muted)',
+                    opacity: sendingEmail ? 0.6 : 1,
+                  }}
+                >
+                  {sendingEmail ? <Loader2 size={11} className="animate-spin" /> : <Mail size={11} />}
+                  {emailSent ? 'Sent!' : sendingEmail ? 'Sending...' : 'Email summary'}
+                </button>
+              )}
+            </div>
           </div>
 
           {visibleAlerts.length === 0 ? (
