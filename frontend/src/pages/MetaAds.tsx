@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getMetaCampaigns } from '../services/api'
+import { useBrand } from '../context/BrandContext'
 import KPICard from '../components/KPICard'
 
 function StatusBadge({ status }: { status: string }) {
@@ -8,12 +9,24 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export default function MetaAds() {
-  const [campaigns, setCampaigns] = useState<any[]>([])
-  const [summary, setSummary] = useState<any>(null)
+  const { activeBrand } = useBrand()
+  const [campaigns, setCampaigns]     = useState<any[]>([])
+  const [summary, setSummary]         = useState<any>(null)
+  const [dataSource, setDataSource]   = useState<string>('mock')
+  const [currency, setCurrency]       = useState<string>('USD')
+  const [pulledAt, setPulledAt]       = useState<string | null>(null)
 
   useEffect(() => {
-    getMetaCampaigns().then(r => { setCampaigns(r.data.campaigns); setSummary(r.data.summary) }).catch(() => {})
-  }, [])
+    getMetaCampaigns(activeBrand?.id)
+      .then(r => {
+        setCampaigns(r.data.campaigns)
+        setSummary(r.data.summary)
+        setDataSource(r.data.data_source)
+        setCurrency(r.data.currency || 'USD')
+        setPulledAt(r.data.pulled_at || null)
+      })
+      .catch(() => {})
+  }, [activeBrand?.id])
 
   return (
     <div className="space-y-6">
@@ -22,11 +35,16 @@ export default function MetaAds() {
           <h1 className="text-xl font-bold text-white">Meta Ads</h1>
           <p className="text-xs text-gray-500 mt-0.5">Facebook · Instagram · Audience Network</p>
         </div>
-        <span className="badge-blue">Future: Live API integration</span>
+        <div className="flex items-center gap-2">
+          <span className={dataSource === 'live' ? 'badge-green' : 'badge-yellow'}>
+            {dataSource === 'live' ? `Live · ${currency}` : 'Mock data'}
+          </span>
+          {pulledAt && <span className="text-xs text-gray-500">Updated {new Date(pulledAt).toLocaleDateString('en-GB', {day:'2-digit',month:'short'})}</span>}
+        </div>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
-        <KPICard label="Total Spend" value={`£${summary?.total_spend?.toLocaleString() ?? '—'}`} />
+        <KPICard label="Total Spend" value={summary ? `${currency === 'INR' ? '₹' : '$'}${summary.total_spend?.toLocaleString()}` : '—'} />
         <KPICard label="Purchases + Leads" value={summary?.total_results ?? '—'} />
         <KPICard label="Avg. ROAS" value={summary ? `${summary.avg_roas}x` : '—'} />
         <KPICard label="Active Campaigns" value={campaigns.filter(c => c.status === 'ACTIVE').length} />

@@ -59,8 +59,16 @@ export const getAgentRoster = () => api.get('/dashboard/agent-roster')
 // Campaigns
 export const getGoogleCampaigns = (status?: string) =>
   api.get(`/campaigns/google${status ? `?status=${status}` : ''}`)
-export const getMetaCampaigns = (status?: string) =>
-  api.get(`/campaigns/meta${status ? `?status=${status}` : ''}`)
+export const getMetaCampaigns = (brandId?: string, status?: string) => {
+  const params = new URLSearchParams()
+  if (brandId) params.append('brand_id', brandId)
+  if (status)  params.append('status', status)
+  const qs = params.toString()
+  return api.get(`/campaigns/meta${qs ? `?${qs}` : ''}`)
+}
+
+export const saveMetaSnapshot = (brandId: string, data: { campaigns: object[]; currency: string; source: string; pulled_at: string }) =>
+  api.post(`/campaigns/meta/${brandId}/snapshot`, data)
 export const getGoogleKeywords = (minQS?: number) =>
   api.get(`/campaigns/google/keywords${minQS ? `?min_qs=${minQS}` : ''}`)
 
