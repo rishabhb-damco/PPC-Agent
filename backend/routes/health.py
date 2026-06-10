@@ -27,14 +27,19 @@ from services.google_ads_service import google_ads_service
 router = APIRouter()
 
 
+PERFORMANCE_COMPONENTS = {"cpl", "roas", "pacing"}
+
 def _score(components: dict) -> str:
+    """
+    Returns unknown if no performance components exist.
+    Retention alone is insufficient to produce a meaningful health signal.
+    """
+    has_performance = any(k in PERFORMANCE_COMPONENTS for k in components)
+    if not has_performance:
+        return "unknown"
     statuses = list(components.values())
-    if not statuses:
-        return "unknown"   # No targets configured — cannot produce a reliable health signal
-    if "red" in statuses:
-        return "red"
-    if "amber" in statuses:
-        return "amber"
+    if "red"   in statuses: return "red"
+    if "amber" in statuses: return "amber"
     return "green"
 
 
