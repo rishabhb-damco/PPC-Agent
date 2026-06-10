@@ -53,7 +53,7 @@ export default function GoogleAds() {
   const sym        = currency === 'INR' ? '₹' : '$'
 
   // Compute avg CPL from summary
-  const avgCpl = summary?.total_spend && summary?.total_conversions
+  const avgCpl = summary?.total_spend && summary?.total_conversions > 0
     ? summary.total_spend / summary.total_conversions
     : null
 
@@ -77,6 +77,31 @@ export default function GoogleAds() {
           {dataSource === 'live' ? 'Live data' : 'Mock data'}
         </span>
       </div>
+
+      {/* Mock data banner — shown when campaigns are not from a live connected account */}
+      {dataSource === 'mock' && (
+        <div
+          className="flex items-start gap-3 px-4 py-3 rounded-lg text-sm"
+          style={{
+            backgroundColor: 'rgba(245,158,11,0.08)',
+            border: '1px solid rgba(245,158,11,0.25)',
+          }}
+        >
+          <span style={{ color: 'var(--warning)', fontSize: 16, lineHeight: 1.4 }}>⚠</span>
+          <div>
+            <p className="font-semibold" style={{ color: 'var(--warning)' }}>
+              {activeBrand && !activeBrand.platforms?.includes('google')
+                ? 'Google Ads not connected for this client'
+                : 'Google Ads API not connected — showing sample data'}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              {activeBrand && !activeBrand.platforms?.includes('google')
+                ? 'This client does not have Google Ads in their platform configuration.'
+                : 'The numbers below are illustrative. Connect Google Ads credentials to see live campaign data.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards with targets */}
       <div className="grid grid-cols-4 gap-4">

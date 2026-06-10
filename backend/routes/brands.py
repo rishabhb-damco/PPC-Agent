@@ -208,7 +208,7 @@ async def set_brand_targets(
     db: AsyncSession = Depends(get_db),
     _: dict = Depends(get_current_user),
 ):
-    brand = await update_brand_targets(brand_id, data.dict(exclude_none=False), db)
+    brand = await update_brand_targets(brand_id, data.dict(exclude_unset=True), db)
     if not brand:
         raise HTTPException(status_code=404, detail="Brand not found")
     return {"brand": brand}
