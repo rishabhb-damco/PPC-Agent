@@ -29,6 +29,8 @@ router = APIRouter()
 
 def _score(components: dict) -> str:
     statuses = list(components.values())
+    if not statuses:
+        return "unknown"   # No targets configured — cannot produce a reliable health signal
     if "red" in statuses:
         return "red"
     if "amber" in statuses:

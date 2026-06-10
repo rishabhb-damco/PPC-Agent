@@ -5,8 +5,9 @@ import {
 } from 'recharts'
 import {
   AlertTriangle, XCircle, Info, CheckCircle, Clock, Loader2,
-  Plus, ChevronRight, Play, Zap, X, TrendingUp, Share2, Mail,
+  Plus, ChevronRight, Play, Zap, X, TrendingUp, Share2, Mail, Target,
 } from 'lucide-react'
+import TargetsModal from '../components/TargetsModal'
 import { useBrand } from '../context/BrandContext'
 import {
   getDashboardOverview, getAlerts, getChartData,
@@ -68,8 +69,9 @@ export default function Dashboard() {
   const [aiStatus, setAiStatus]         = useState<any>(null)
   const [pacing, setPacing]             = useState<any[]>([])
   const [healthScores, setHealthScores] = useState<Record<string, string>>({})
-  const [sendingEmail, setSendingEmail] = useState(false)
-  const [emailSent, setEmailSent]       = useState(false)
+  const [sendingEmail, setSendingEmail]   = useState(false)
+  const [emailSent, setEmailSent]         = useState(false)
+  const [targetsModal, setTargetsModal]   = useState<any | null>(null)  // brand object or null
 
   const handleSendAlertEmail = async () => {
     setSendingEmail(true)
@@ -114,6 +116,13 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-5">
+      {targetsModal && (
+        <TargetsModal
+          brand={targetsModal}
+          onClose={() => setTargetsModal(null)}
+          onSaved={() => { refreshBrands(); setTargetsModal(null) }}
+        />
+      )}
 
       {/* ── Header + Focus strip (single row) ────────────────────────────── */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -207,7 +216,13 @@ export default function Dashboard() {
                   const isActive  = activeBrand?.id === brand.id
                   const healthScore = healthScores[brand.id]
                   const pacingData  = pacing.find(p => p.brand_id === brand.id)
-                  const healthDot = healthScore === 'red' ? '#F87171' : healthScore === 'amber' ? 'var(--warning)' : healthScore === 'green' ? 'var(--success)' : 'var(--text-hint)'
+                  const healthDot = healthScore === 'red' ? '#F87171'
+                    : healthScore === 'amber'   ? 'var(--warning)'
+                    : healthScore === 'green'   ? 'var(--success)'
+                    : healthScore === 'unknown' ? 'var(--border-strong)'  // no targets configured
+                    : 'var(--text-hint)'
+                  const healthTitle = healthScore === 'unknown' ? 'No targets configured — set targets to enable health scoring'
+                    : healthScore === 'green' ? 'Healthy' : healthScore === 'amber' ? 'Needs attention' : healthScore === 'red' ? 'Action required' : ''
 
                   return (
                     <tr
@@ -254,7 +269,7 @@ export default function Dashboard() {
                       {/* Health + Pacing */}
                       <td className="px-3 py-2.5">
                         <div className="flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: healthDot }} />
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: healthDot }} title={healthTitle} />
                           <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
                             {pacingData ? (
                               pacingData.status === 'on_pace' ? 'On pace' :
@@ -294,9 +309,20 @@ export default function Dashboard() {
                         )}
                       </td>
 
-                      {/* Actions — single compact button */}
+                      {/* Actions */}
                       <td className="px-4 py-2.5 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Set Targets — shown when no targets configured (C1 fix) */}
+                          {!brand.target_cpl && !brand.target_monthly_spend && (
+                            <button
+                              onClick={() => setTargetsModal(brand)}
+                              className="flex items-center gap-1 text-[11px] px-2 py-1 rounded-md transition-colors"
+                              style={{ color: 'var(--warning)', backgroundColor: 'var(--warning-dim)', border: '1px solid var(--warning-border)' }}
+                              title="Targets not set — click to configure"
+                            >
+                              <Target size={9} /> Targets
+                            </button>
+                          )}
                           {brand.analysis_status === 'completed' && (
                             <button
                               onClick={() => { setActiveBrand(brand); navigate('/approval-queue') }}
