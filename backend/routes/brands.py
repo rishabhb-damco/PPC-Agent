@@ -102,8 +102,8 @@ async def get_all_pacing_route(
 
         # Only query Google Ads if this brand's customer ID matches the configured account.
         # Prevents Wellspring's spend from appearing on Meta-only clients.
-        brand_gads_id = brand.get("google_ads_customer_id", "").replace("-", "")
-        configured_id = settings.GOOGLE_ADS_CUSTOMER_ID.replace("-", "") if settings.GOOGLE_ADS_CUSTOMER_ID else ""
+        brand_gads_id = (brand.get("google_ads_customer_id") or "").replace("-", "")
+        configured_id = (settings.GOOGLE_ADS_CUSTOMER_ID or "").replace("-", "")
         if "google" in platforms and google_ads_service.is_configured and brand_gads_id and brand_gads_id == configured_id:
             try:
                 camps = await google_ads_service.get_campaigns("THIS_MONTH")

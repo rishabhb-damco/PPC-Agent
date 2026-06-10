@@ -54,9 +54,9 @@ async def _compute_health(brand: dict, db: AsyncSession) -> dict:
     # The global mock alerts would produce incorrect health signals for all clients.
 
     # ── CPL vs target ────────────────────────────────────────────────────────
-    brand_gads_id  = brand.get("google_ads_customer_id", "").replace("-", "")
-    configured_id  = settings.GOOGLE_ADS_CUSTOMER_ID.replace("-", "") if settings.GOOGLE_ADS_CUSTOMER_ID else ""
-    gads_linked    = bool(brand_gads_id and brand_gads_id == configured_id)
+    brand_gads_id  = (brand.get("google_ads_customer_id") or "").replace("-", "")
+    configured_id  = (settings.GOOGLE_ADS_CUSTOMER_ID or "").replace("-", "")
+    gads_linked    = bool(brand_gads_id and configured_id and brand_gads_id == configured_id)
 
     if target_cpl and "google" in platforms and google_ads_service.is_configured and gads_linked:
         try:
